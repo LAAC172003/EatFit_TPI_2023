@@ -1,0 +1,16 @@
+{
+    "name": "laac/eat-fit_tpi_2023",
+    "description": "TPI 2023 - EatFit",
+    "autoload": {
+        "psr-4": {
+            "laac\\eatFitTpi2023\\": "./"
+        }
+    },
+    "authors": [
+        {
+            "name": "LAAC172003",
+            "email": "61194486+LAAC172003@users.noreply.github.com"
+        }
+    ],
+    "require": {}
+}
