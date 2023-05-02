@@ -1,12 +1,12 @@
 <?php
 
-use laac\eatFitTpi2023\core\ApiValue;
-use laac\eatFitTpi2023\core\Application;
-use laac\eatFitTpi2023\core\EnvLoader;
-use laac\eatFitTpi2023\core\Model;
-use laac\eatFitTpi2023\core\Request;
+use eatFitTpi2023\core\ApiValue;
+use eatFitTpi2023\core\Application;
+use eatFitTpi2023\core\EnvLoader;
+use eatFitTpi2023\core\Model;
+use eatFitTpi2023\core\Request;
 
-use laac\eatFitTpi2023\controllers\UserController;
+use eatFitTpi2023\controllers\UserController;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -32,5 +32,5 @@ $app->router->get('/', function (): ApiValue {
 $app->router->get('/test', function (): ApiValue {
     return new ApiValue("test", 200);
 });
-$app->router->get('/user', [UserController::class, 'readUser']);// get User
+//$app->router->get('/user', [UserController::class, 'readUser']);// get User
 $app->run();

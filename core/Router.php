@@ -1,6 +1,6 @@
 <?php
 
-namespace laac\eatFitTpi2023\core;
+namespace eatFitTpi2023\core;
 
 use Exception;
 

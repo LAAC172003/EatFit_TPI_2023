@@ -1,6 +1,6 @@
 <?php
 
-namespace laac\eatFitTpi2023\core;
+namespace eatFitTpi2023\core;
 
 use Exception;
 
@@ -119,6 +119,4 @@ class Request
             if (!empty($extraFields)) throw new Exception("The fields: " . implode(", ", $extraFields) . " do not exist. Allowed fields are: " . implode(", ", $requiredFields), 422);
         }
     }
-
-
 }

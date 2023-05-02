@@ -3,7 +3,7 @@
     "description": "TPI 2023 - EatFit",
     "autoload": {
         "psr-4": {
-            "laac\\eatFitTpi2023\\": "./"
+            "eatFitTpi2023\\": "./"
         }
     },
     "authors": [

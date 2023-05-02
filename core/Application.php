@@ -1,9 +1,9 @@
 <?php
 
-namespace laac\eatFitTpi2023\core;
+namespace eatFitTpi2023\core;
 
 use Exception;
-use laac\eatFitTpi2023\core\db\Database;
+use eatFitTpi2023\core\db\Database;
 use PDOException;
 
 class Application

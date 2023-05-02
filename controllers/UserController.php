@@ -1,12 +1,12 @@
 <?php
 
-namespace laac\eatFitTpi2023\controllers;
+namespace eatFitTpi2023\controllers;
 
 use Exception;
-use laac\eatFitTpi2023\core\ApiValue;
-use laac\eatFitTpi2023\core\Model;
-use laac\eatFitTpi2023\core\Request;
-use laac\eatFitTpi2023\models\User;
+use eatFitTpi2023\core\ApiValue;
+use eatFitTpi2023\core\Model;
+use eatFitTpi2023\core\Request;
+use eatFitTpi2023\models\User;
 
 class UserController
 {

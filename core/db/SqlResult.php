@@ -1,6 +1,6 @@
 <?php
 
-namespace laac\eatFitTpi2023\core\db;
+namespace eatFitTpi2023\core\db;
 
 use PDO;
 use PDOStatement;
