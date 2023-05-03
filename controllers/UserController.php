@@ -13,33 +13,33 @@ class UserController
     /**
      * @throws Exception
      */
-    public function readUser(Request $request): ApiValue
+    public function read(Request $request): ApiValue
     {
-        return new ApiValue(User::read($request->getData(Model::REQUIRED_FIELDS['login'])), 200);
+        return new ApiValue(User::read($request->getData(['email', "password"])), 200);
     }
 
     /**
      *
      * @throws Exception
      */
-    public function createUser(Request $request): ApiValue
+    public function create(Request $request): ApiValue
     {
-        return new ApiValue("User created", 201);
+        return new ApiValue(User::create($request->getData(['email', "password", "username"])), 201);
     }
 
     /**
      * @throws Exception
      */
-    public function updateUser(Request $request): ApiValue
+    public function update(Request $request): ApiValue
     {
-        return new ApiValue("User updated", 200);
+        return new ApiValue(User::update($request->getData(['email', "password", "username"], false)), 200);
     }
 
     /**
      * @throws Exception
      */
-    public function deleteUser(Request $request): ApiValue
+    public function delete(Request $request): ApiValue
     {
-        return new ApiValue("User deleted", 200);
+        return new ApiValue(User::delete(), 200);
     }
 }

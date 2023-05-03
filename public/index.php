@@ -32,5 +32,8 @@ $app->router->get('/', function (): ApiValue {
 $app->router->get('/test', function (): ApiValue {
     return new ApiValue("test", 200);
 });
-//$app->router->get('/user', [UserController::class, 'readUser']);// get User
+$app->router->get('/user', [UserController::class, 'read']);// get User
+$app->router->post('/user', [UserController::class, 'create']);// get User
+$app->router->put('/user', [UserController::class, 'update']);// get User
+$app->router->delete('/user', [UserController::class, 'delete']);// get User
 $app->run();

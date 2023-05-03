@@ -12,5 +12,7 @@
             "email": "61194486+LAAC172003@users.noreply.github.com"
         }
     ],
-    "require": {}
+    "require": {
+        "ext-pdo": "*"
+    }
 }

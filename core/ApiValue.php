@@ -14,6 +14,7 @@ class ApiValue
         405 => 'Method Not Allowed',
         409 => 'Conflict',
         422 => 'Unprocessable Entity',
+        498 => 'Token expired/invalid',
         500 => 'Internal Server Error',
     ];
 

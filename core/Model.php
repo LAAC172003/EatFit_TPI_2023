@@ -25,7 +25,7 @@ abstract class Model
     {
         $headers = getallheaders();
         if (!isset($headers['Authorization'])) {
-            throw new Exception("Invalid token", 401);
+            throw new Exception("Token expired/invalid", 498);
         }
         return explode(" ", $headers['Authorization'])[1];
     }
@@ -40,12 +40,10 @@ abstract class Model
     protected static function isValidToken(bool $expiration = true): array
     {
         $data = self::decodeJWT(self::getToken());
-//        if (!User::userExists($data['payload']['email'])) {
-//            throw new Exception("User not found", 404);
-//        }
+        if (!User::getUser($data['payload']['email'])) throw new Exception("User not found", 404);
         if ($expiration) {
             if ($data['payload']['exp'] < time()) {
-                throw new Exception("Token expired", 401);
+                throw new Exception("Token expired/invalid", 498);
             }
         }
         return $data;
@@ -84,6 +82,7 @@ abstract class Model
     {
         $data = self::isValidToken();
         $user = User::getUser($data['payload']['email'])->getFirstRow();
+        if (!$user) throw new Exception("User not found", 404);
         unset($user['password']);
         return $user;
     }
@@ -104,14 +103,12 @@ abstract class Model
      *
      * @param string $jwt Le JWT à décoder
      * @return array Les composants du JWT
-     * @throws InvalidArgumentException Si le JWT est invalide
+     * @throws Exception Si le JWT est invalide
      */
     private static function decodeJWT(string $jwt): array
     {
         $parts = explode('.', $jwt);
-        if (count($parts) !== 3) {
-            throw new InvalidArgumentException('Invalid JWT format');
-        }
+        if (count($parts) !== 3) throw new Exception('Invalid JWT format', 498);
         $headers = json_decode(self::urlDecode($parts[0]), true);
         $payload = json_decode(self::urlDecode($parts[1]), true);
         $signature = self::urlDecode($parts[2]);
