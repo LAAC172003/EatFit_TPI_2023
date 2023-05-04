@@ -88,7 +88,9 @@ class User extends Model
     public static function delete(): string
     {
         $dataToken = self::isValidToken(false);
-        $idUser = self::getUser($dataToken['payload']['email'])->getFirstRow()['idUser'];
+        $user = self::getUser($dataToken['payload']['email']);
+        if ($user->isEmpty()) throw new Exception("User not found", 404);
+        $idUser = $user->getFirstRow()['idUser'];
         try {
             Application::$app->db->execute("DELETE FROM users WHERE idUser = :idUser", [":idUser" => $idUser]);
         } catch (Exception $e) {
