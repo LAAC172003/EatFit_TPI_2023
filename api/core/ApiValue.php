@@ -1,6 +1,6 @@
 <?php
 
-namespace eatFitTpi2023\core;
+namespace Eatfit\Api\Core;
 class ApiValue
 {
     private const STATUS_CODES = [

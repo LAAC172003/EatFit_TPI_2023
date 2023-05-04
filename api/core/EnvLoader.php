@@ -1,12 +1,13 @@
 <?php
 
-namespace eatFitTpi2023\core;
+namespace Eatfit\Api\Core;
 
 use RuntimeException;
 
 class EnvLoader
 {
     private string $envFilePath;
+
     /**
      * Constructeur EnvLoader.
      *

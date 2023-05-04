@@ -1,10 +1,10 @@
 <?php
 
-namespace eatFitTpi2023\controllers;
+namespace Eatfit\Api\Controllers;
 
-use eatFitTpi2023\core\ApiValue;
-use eatFitTpi2023\core\Request;
-use eatFitTpi2023\models\Recipe;
+use eatFitTpi2023\api\core\ApiValue;
+use eatFitTpi2023\api\core\Request;
+use eatFitTpi2023\api\models\Recipe;
 
 class RecipeController
 {

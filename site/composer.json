@@ -1,0 +1,15 @@
+{
+  "name": "Eatfit/site",
+  "autoload": {
+    "psr-4": {
+      "Eatfit\\Site\\": "./"
+    }
+  },
+  "authors": [
+    {
+      "name": "LAAC172003",
+      "email": "61194486+LAAC172003@users.noreply.github.com"
+    }
+  ],
+  "require": {}
+}

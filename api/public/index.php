@@ -1,12 +1,10 @@
 <?php
 
-use eatFitTpi2023\core\ApiValue;
-use eatFitTpi2023\core\Application;
-use eatFitTpi2023\core\EnvLoader;
-use eatFitTpi2023\core\Model;
-use eatFitTpi2023\core\Request;
+use Eatfit\Api\Controllers\UserController;
+use Eatfit\Api\Core\ApiValue;
+use Eatfit\Api\Core\Application;
+use Eatfit\Api\Core\EnvLoader;
 
-use eatFitTpi2023\controllers\UserController;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 

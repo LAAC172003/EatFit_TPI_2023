@@ -1,12 +1,11 @@
 <?php
 
-namespace eatFitTpi2023\controllers;
+namespace Eatfit\Api\Controllers;
 
+use Eatfit\Api\Core\ApiValue;
+use Eatfit\Api\Core\Request;
+use Eatfit\Api\Models\User;
 use Exception;
-use eatFitTpi2023\core\ApiValue;
-use eatFitTpi2023\core\Model;
-use eatFitTpi2023\core\Request;
-use eatFitTpi2023\models\User;
 
 class UserController
 {
@@ -24,7 +23,7 @@ class UserController
      */
     public function create(Request $request): ApiValue
     {
-        return new ApiValue(User::create($request->getData(['email', "password", "username"])), 201);
+        return new ApiValue(User::create($request->getData(['email', "password", "confirm_password", "username"])), 201);
     }
 
     /**

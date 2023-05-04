@@ -1,6 +1,6 @@
 <?php
 
-namespace Eatfit\Api\Core\Db;
+namespace Eatfit\Site\Core\Db;
 
 use Exception;
 use PDO;

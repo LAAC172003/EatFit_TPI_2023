@@ -1,9 +1,8 @@
 {
-    "name": "laac/eat-fit_tpi_2023",
-    "description": "TPI 2023 - EatFit",
+    "name": "eatfit/api",
     "autoload": {
         "psr-4": {
-            "eatFitTpi2023\\": "./"
+            "Eatfit\\Api\\": "./"
         }
     },
     "authors": [
@@ -12,7 +11,5 @@
             "email": "61194486+LAAC172003@users.noreply.github.com"
         }
     ],
-    "require": {
-        "ext-pdo": "*"
-    }
+    "require": {}
 }

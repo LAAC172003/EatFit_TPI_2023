@@ -1,11 +1,10 @@
 <?php
 
-namespace eatFitTpi2023\models;
+namespace Eatfit\Api\Models;
 
-use eatFitTpi2023\core\Application;
-use eatFitTpi2023\core\db\SqlResult;
-use eatFitTpi2023\core\Model;
-
+use Eatfit\Api\Core\Application;
+use Eatfit\Api\Core\Db\SqlResult;
+use Eatfit\Api\Core\Model;
 use Exception;
 
 class Recipe extends Model

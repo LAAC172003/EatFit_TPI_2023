@@ -1,9 +1,9 @@
 <?php
 
-namespace eatFitTpi2023\core;
+namespace Eatfit\Api\Core;
 
 
-use eatFitTpi2023\models\User;
+use eatFitTpi2023\api\models\User;
 use Exception;
 use InvalidArgumentException;
 

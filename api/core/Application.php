@@ -1,10 +1,9 @@
 <?php
 
-namespace eatFitTpi2023\core;
+namespace Eatfit\Api\Core;
 
+use Eatfit\Api\Core\Db\Database;
 use Exception;
-use eatFitTpi2023\core\db\Database;
-use PDOException;
 
 class Application
 {

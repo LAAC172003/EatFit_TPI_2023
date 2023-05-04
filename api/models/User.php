@@ -1,13 +1,13 @@
 <?php
 
 
-namespace eatFitTpi2023\models;
+namespace Eatfit\Api\Models;
 
-use eatFitTpi2023\core\Application;
-use eatFitTpi2023\core\db\SqlResult;
+use Eatfit\Api\Core\Application;
+use Eatfit\Api\Core\Db\SqlResult;
+use Eatfit\Api\Core\Model;
 
 use Exception;
-use eatFitTpi2023\core\Model;
 
 class User extends Model
 {
@@ -33,10 +33,13 @@ class User extends Model
     public static function create(array $data): array|Exception
     {
         //a revoir
-        if (!self::getUser($data['email'])->isEmpty()) throw new Exception("User already exists", 409);
+        $data['password'] = filter_var($data['password'], FILTER_SANITIZE_SPECIAL_CHARS);
         if (strlen($data['password']) < 8) throw new Exception("Password must be at least 8 characters long", 400);
+        if (!self::getUser($data['email'])->isEmpty()) throw new Exception("User already exists", 409);
+        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) throw new Exception("Invalid email", 400);
+        if ($data['password'] != $data['confirm_password']) throw new Exception("Passwords don't match", 400);
         $data = [
-            'username' => $data['username'],
+            'username' => filter_var($data['username'], FILTER_SANITIZE_SPECIAL_CHARS),
             'email' => $data['email'],
             'password' => password_hash($data['password'], PASSWORD_DEFAULT),
             'token' => self::generateJWT($data),
@@ -60,12 +63,17 @@ class User extends Model
     public static function update(array $data): string
     {
         $dataToken = self::isValidToken(false);
-        $idUser = self::getUser($dataToken['payload']['email'])->getFirstRow()['idUser'];
+        $user = self::getUser($dataToken['payload']['email']);
+        if ($user->isEmpty()) throw new Exception("User not found", 404);
+        $idUser = $user->getFirstRow()['idUser'];
         $updates = [];
         if ($data == null) throw new Exception("No data to update", 400);
         if (isset($data['email']) && $data['email'] != "") $updates['email'] = $data['email'];
         if (isset($data['username']) && $data['username'] != "") $updates['username'] = $data['username'];
-        if (isset($data['password']) && $data['password'] != "") $updates['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+        if (isset($data['password']) && $data['password'] != "") {
+            if (strlen($data['password']) < 8) throw new Exception("Password must be at least 8 characters long", 400);
+            $updates['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+        }
         $sb = "";
         if (count($updates) > 0) {
             $sb = "User updated successfully :";
