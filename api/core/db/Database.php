@@ -49,4 +49,9 @@ class Database
         $stmt->execute($params);
         return new SqlResult($stmt);
     }
+
+    public static function getLastInsertId(): false|string
+    {
+        return self::$pdo->lastInsertId();
+    }
 }

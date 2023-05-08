@@ -20,7 +20,7 @@ class User extends Model
      */
     public static function read(array $data): array|Exception
     {
-        return self::login($data['email'], $data['password']);
+        return self::getUserInfo($data['email'], $data['password']);
     }
 
     /**
@@ -33,17 +33,19 @@ class User extends Model
     public static function create(array $data): array|Exception
     {
         //a revoir
-        $data['password'] = filter_var($data['password'], FILTER_SANITIZE_SPECIAL_CHARS);
+
+        $email = filter_var($data['email'], FILTER_VALIDATE_EMAIL);
+        if (!$email) throw new Exception("Invalid email", 400);
+        $data = self::filterArray($data);
         if (strlen($data['password']) < 8) throw new Exception("Password must be at least 8 characters long", 400);
-        if (!self::getUser($data['email'])->isEmpty()) throw new Exception("User already exists", 409);
-        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) throw new Exception("Invalid email", 400);
+        if (!self::getUser($email)->isEmpty()) throw new Exception("User already exists", 409);
         if ($data['password'] != $data['confirm_password']) throw new Exception("Passwords don't match", 400);
         $data = [
-            'username' => filter_var($data['username'], FILTER_SANITIZE_SPECIAL_CHARS),
-            'email' => $data['email'],
+            'username' => $data['username'],
+            'email' => $email,
             'password' => password_hash($data['password'], PASSWORD_DEFAULT),
             'token' => self::generateJWT($data),
-            'expiration' => self::$expiration
+            'expiration' => time() + (2 * 3600)
         ];
         try {
             Application::$app->db->execute("INSERT INTO users (username, email, password, token, expiration) VALUES (:username, :email, :password, :token, :expiration)", [":username" => $data['username'], ":email" => $data['email'], ":password" => $data['password'], ":token" => $data['token'], ":expiration" => $data['expiration']]);
@@ -62,7 +64,7 @@ class User extends Model
      */
     public static function update(array $data): string
     {
-        $dataToken = self::isValidToken(false);
+        $dataToken = self::isTokenValid(false);
         $user = self::getUser($dataToken['payload']['email']);
         if ($user->isEmpty()) throw new Exception("User not found", 404);
         $idUser = $user->getFirstRow()['idUser'];
@@ -95,13 +97,14 @@ class User extends Model
      */
     public static function delete(): string
     {
-        $dataToken = self::isValidToken(false);
+        $dataToken = self::isTokenValid(false);
         $user = self::getUser($dataToken['payload']['email']);
         if ($user->isEmpty()) throw new Exception("User not found", 404);
         $idUser = $user->getFirstRow()['idUser'];
         try {
             Application::$app->db->execute("DELETE FROM users WHERE idUser = :idUser", [":idUser" => $idUser]);
         } catch (Exception $e) {
+            var_dump($e);
             throw new Exception("Error deleting user", 500);
         }
         return "User deleted successfully";
@@ -114,7 +117,7 @@ class User extends Model
      * @return array|Exception Vrai si l'utilisateur existe, faux sinon.
      * @throws Exception
      */
-    private static function login(string $email, string $password): array|Exception
+    private static function getUserInfo(string $email, string $password): array|Exception
     {
         $userTab = self::getUser($email);
         if (!$userTab->getValues()) throw new Exception("User or password invalid", 400);
@@ -128,6 +131,30 @@ class User extends Model
     }
 
     /**
+     * @throws Exception
+     */
+    public static function authenticate(array $data): array|Exception
+    {
+
+        $email = filter_var($data['email'], FILTER_VALIDATE_EMAIL);
+        $password = filter_var($data['password'], FILTER_SANITIZE_SPECIAL_CHARS);
+        if (!$email || !$password) throw new Exception("Invalid email or password", 400);
+        if (strlen($password) < 8) throw new Exception("Password must be at least 8 characters long", 400);
+        $user = self::getUserInfo($email, $password);
+        try {
+            if (self::isTokenExpired($user['expiration'])) {
+                $user['token'] = self::generateJWT($user);
+                $user['expiration'] = time() + (2 * 3600);
+                Application::$app->db->execute("UPDATE users SET token = :token, expiration = :expiration WHERE idUser = :idUser", [":token" => $user['token'], ":expiration" => $user['expiration'], ":idUser" => $user['idUser']]);
+            }
+        } catch (Exception $e) {
+            throw new Exception("Error updating user", 500);
+        }
+        unset($user['password']);
+        return $user;
+    }
+
+    /**
      * Récupère les informations d'un utilisateur à partir de son adresse e-mail.
      *
      * @param string $email L'adresse e-mail de l'utilisateur.
@@ -138,7 +165,6 @@ class User extends Model
     {
         try {
             return Application::$app->db->execute("SELECT * FROM users WHERE email = :email", [":email" => $email]);
-
         } catch (Exception $e) {
             throw new Exception("A problem has occurred", 500);
         }

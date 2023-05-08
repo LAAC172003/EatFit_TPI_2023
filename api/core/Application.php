@@ -27,6 +27,7 @@ class Application
         $this->request = new Request();
         $this->router = new Router($this->request);
         $this->config = $config;
+
     }
 
     /**

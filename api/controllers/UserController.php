@@ -41,4 +41,12 @@ class UserController
     {
         return new ApiValue(User::delete(), 200);
     }
+
+    /**
+     * @throws Exception
+     */
+    public function login(Request $request): ApiValue
+    {
+        return new ApiValue(User::authenticate($request->getData(['email', "password"])), 200);
+    }
 }

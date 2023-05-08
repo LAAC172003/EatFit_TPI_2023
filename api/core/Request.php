@@ -103,20 +103,51 @@ class Request
      * @param array $fields
      * @param array|null $requiredFields
      * @param bool $requireAllFields
+     * @param string $parentKey
      * @throws Exception
      */
-    private function validateData(array $fields, array $requiredFields = null, bool $requireAllFields = true): void
+    private function validateData(array $fields, array $requiredFields = null, bool $requireAllFields = true, $parentKey = ''): void
     {
         if (empty($fields)) throw new Exception("No data in the body", 400);
         if ($requiredFields !== null) {
             if (!is_array($requiredFields) || count($requiredFields) == 0) throw new Exception("Invalid required fields", 400);
             $missingFields = [];
-            $extraFields = array_diff(array_keys($fields), $requiredFields);
-            foreach ($requiredFields as $field) if (!array_key_exists($field, $fields)) {
-                if ($requireAllFields) $missingFields[] = $field;
+            $extraFields = array_diff(array_keys($fields), array_keys($requiredFields));
+
+            foreach ($requiredFields as $field => $nestedFields) {
+                if (is_array($nestedFields)) {
+                    if (array_key_exists($field, $fields) && is_array($fields[$field])) {
+                        $this->validateData($fields[$field], $nestedFields, $requireAllFields, $parentKey . $field . '.');
+                        $extraFields = array_diff($extraFields, [$field]);
+                    } else if ($requireAllFields) $missingFields[] = $parentKey . $field;
+                } else {
+                    if (!array_key_exists($nestedFields, $fields)) {
+                        if ($requireAllFields) $missingFields[] = $parentKey . $nestedFields;
+                    } else {
+                        $extraFields = array_diff($extraFields, [$nestedFields]);
+                    }
+                }
             }
-            if (!empty($missingFields)) throw new Exception("Missing fields: " . implode(", ", $missingFields), 422);
-            if (!empty($extraFields)) throw new Exception("The fields: " . implode(", ", $extraFields) . " do not exist. Allowed fields are: " . implode(", ", $requiredFields), 422);
+
+            if (!empty($missingFields)) {
+                $allowedFields = array_map(function ($key, $value) {
+                    return is_array($value) ? $key : $value;
+                }, array_keys($requiredFields), $requiredFields);
+
+                $missingFieldsFormatted = array_map(function ($field) {
+                    return str_replace(explode('.', $field)[0] . ".", '', $field);
+                }, $missingFields);
+                throw new Exception("Missing fields: " . implode(", ", $missingFieldsFormatted) . ". Allowed fields" . ($parentKey ? " in " . rtrim($parentKey, '.') : "") . " are: " . implode(", ", $allowedFields), 422);
+            }
+
+
+            if (!empty($extraFields)) {
+                $allowedFields = array_map(function ($key, $value) {
+                    return is_array($value) ? $key : $value;
+                }, array_keys($requiredFields), $requiredFields);
+                throw new Exception("The fields: " . implode(", ", $extraFields) . " do not exist. Allowed fields" . ($parentKey ? " in " . rtrim($parentKey, '.') : "") . " are: " . implode(", ", $allowedFields), 422);
+            }
         }
     }
+
 }
