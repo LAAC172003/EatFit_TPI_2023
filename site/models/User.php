@@ -2,69 +2,122 @@
 
 namespace Eatfit\Site\Models;
 
+use Eatfit\Site\Core\Application;
+use Eatfit\Site\Core\Model;
 
-
-use Eatfit\Site\Core\Db\DbModel;
-
-class User extends DbModel
+class User extends Model
 {
-    public int $id = 0;
-    public string $firstname = '';
-    public string $lastname = '';
+    public int $idUser = 0;
+    public string $username = '';
     public string $email = '';
     public string $password = '';
-    public string $passwordConfirm = '';
+    public string $password_confirm = '';
+    public string $token = '';
+    public int $expiration = 0;
 
-    public static function tableName(): string
+    public function rules(): array
     {
-        return 'users';
-    }
-
-    public static function primaryKey(): string
-    {
-        return 'idUser';
-    }
-
-    public function attributes(): array
-    {
-        return ['firstname', 'lastname', 'email', 'password'];
+        return [
+            'username' => [self::RULE_REQUIRED],
+            'email' => [self::RULE_REQUIRED, self::RULE_EMAIL],
+            'password' => [self::RULE_REQUIRED, [self::RULE_MIN, 'min' => 8]],
+            'password_confirm' => [[self::RULE_MATCH, 'match' => 'password']],
+        ];
     }
 
     public function labels(): array
     {
         return [
-            'firstname' => 'First name',
-            'lastname' => 'Last name',
-            'email' => 'Email',
-            'password' => 'Password',
-            'passwordConfirm' => 'Password Confirm'
+            'username' => 'Username: ',
+            'email' => 'Email: ',
+            'password' => 'Password: ',
+            'password_confirm' => 'Password Confirm:'
         ];
     }
 
-    public function rules()
-    {
-        return [
-            'firstname' => [self::RULE_REQUIRED],
-            'lastname' => [self::RULE_REQUIRED],
-            'email' => [self::RULE_REQUIRED, self::RULE_EMAIL, [
-                self::RULE_UNIQUE, 'class' => self::class
-            ]],
-            'password' => [self::RULE_REQUIRED, [self::RULE_MIN, 'min' => 8]],
-            'passwordConfirm' => [[self::RULE_MATCH, 'match' => 'password']],
-        ];
-    }
 
     public function save()
     {
-        $this->password = password_hash($this->password, PASSWORD_DEFAULT);
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'http://eatfittpi2023api/user',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => '{
+                "username":"' . $this->username . '",
+                "email":"' . $this->email . '",
+                "password" : "' . $this->password . '",
+                "confirm_password" : "' . $this->password_confirm . '"
+            }',
+            CURLOPT_HTTPHEADER => array(
+                'Content-Type: application/json'
+            ),
+        ));
 
-        return self::save();
+        $response = json_decode(curl_exec($curl));
+        curl_close($curl);
+        if ($response->value == null || $response->code != 201) {
+            Application::$app->session->setFlash('error', $response->message);
+            Application::$app->response->statusCode($response->code);
+            if ($response->message == "User already exists") {
+                $response->message = "L'utilisateur existe déjà";
+            }
+            Application::$app->session->setFlash('error', $response->message);
+            return false;
+        }
+        Application::$app->response->statusCode($response->code);
+        return $response;
     }
 
-    public function getDisplayName(): string
+    public static function getUser($email, $password): object
     {
-        return $this->firstname . ' ' . $this->lastname;
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'http://eatfittpi2023api/login',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'PUT',
+            CURLOPT_POSTFIELDS => '{
+                "email":"' . $email . '",
+                "password":"' . $password . '"
+            }',
+            CURLOPT_HTTPHEADER => array(
+                'Content-Type: application/json'
+            ),
+        ));
+        $response = curl_exec($curl);
+        curl_close($curl);
+        return json_decode($response);
     }
 
+    public static function getUserByToken($token)
+    {
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'http://eatfittpi2023api/userById',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            CURLOPT_HTTPHEADER => array(
+                "Authorization: Bearer $token"
+            ),
+        ));
 
+        $response = curl_exec($curl);
+        curl_close($curl);
+        return json_decode($response);
+    }
 }

@@ -32,12 +32,15 @@ $app->router->get('/', function (): ApiValue {
 $app->router->get('/test', function (): ApiValue {
     $request = new \Eatfit\Api\Core\Request();
 
-    return new ApiValue($request->getData(["search_filters" => ["title", "category","date_added"], "filter" => ["category", "food_type"]], true), 200);
+    return new ApiValue($request->getData(["search_filters" => ["title", "category", "date_added"], "filter" => ["category", "food_type"]], true), 200);
 });
 
-$app->router->put('/login', [UserController::class, 'login']);// get User
+$app->router->put('/login', [UserController::class, 'login']);// get Useret User
 
 $app->router->get('/user', [UserController::class, 'read']);// get User
+
+$app->router->get('/userById', [UserController::class, 'getUserByToken']);// get User
+
 $app->router->post('/user', [UserController::class, 'create']);// get User
 $app->router->put('/user', [UserController::class, 'update']);// get User
 $app->router->delete('/user', [UserController::class, 'delete']);// get User

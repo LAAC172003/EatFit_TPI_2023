@@ -1,5 +1,5 @@
 {
-  "name": "Eatfit/site",
+  "name": "eatfit/site",
   "autoload": {
     "psr-4": {
       "Eatfit\\Site\\": "./"
@@ -11,5 +11,7 @@
       "email": "61194486+LAAC172003@users.noreply.github.com"
     }
   ],
-  "require": {}
+  "require": {
+    "ext-curl": "*"
+  }
 }

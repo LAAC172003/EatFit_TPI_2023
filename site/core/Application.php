@@ -4,6 +4,7 @@ namespace Eatfit\Site\Core;
 
 use Eatfit\Site\Core\Db\Database;
 use Eatfit\Site\Core\Db\DbModel;
+use Eatfit\Site\Models\User;
 
 class Application
 {
@@ -20,10 +21,9 @@ class Application
     public Request $request;
     public Response $response;
     public ?Controller $controller = null;
-    public Database $db;
     public Session $session;
     public View $view;
-    public ?DbModel $user;
+    public $user;
 
     public function __construct($rootDir, $config)
     {
@@ -34,40 +34,35 @@ class Application
         $this->request = new Request();
         $this->response = new Response();
         $this->router = new Router($this->request, $this->response);
-//        $this->db = new Database($config['db']);
         $this->session = new Session();
         $this->view = new View();
-
-        $userId = Application::$app->session->get('user');
-        if ($userId) {
-            $key = $this->userClass::primaryKey();
-            $this->user = $this->userClass::findOne([$key => $userId]);
+        $token = Application::$app->session->get('user');
+        if ($token != null) {
+            $user = User::getUserByToken($token);
+            $this->user = $user->value;
         }
     }
 
-    public static function isGuest()
+    public static function isGuest(): bool
     {
         return !self::$app->user;
     }
 
-    public function login(UserModel $user)
+    public function login($user): true
     {
-        $this->user = $user;
-        $className = get_class($user);
-        $primaryKey = $className::primaryKey();
-        $value = $user->{$primaryKey};
-        Application::$app->session->set('user', $value);
-
+        Application::$app->session->set('user', $user->value->token);
+        $this->response->statusCode($user->code);
+        Application::$app->response->redirect('/');
         return true;
     }
 
-    public function logout()
+    public function logout(): void
     {
         $this->user = null;
         self::$app->session->remove('user');
     }
 
-    public function run()
+    public function run(): void
     {
         $this->triggerEvent(self::EVENT_BEFORE_REQUEST);
         try {

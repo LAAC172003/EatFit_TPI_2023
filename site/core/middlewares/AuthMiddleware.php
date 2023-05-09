@@ -1,13 +1,6 @@
 <?php
-/**
- * User: TheCodeholic
- * Date: 7/25/2020
- * Time: 11:33 AM
- */
 
 namespace Eatfit\Site\Core\Middlewares;
-
-
 
 use Eatfit\Site\Core\Application;
 use Eatfit\Site\Core\Exception\ForbiddenException;

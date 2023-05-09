@@ -5,13 +5,8 @@ namespace Eatfit\Site\Models;
 
 use Eatfit\Site\Core\Application;
 use Eatfit\Site\Core\Model;
+use Eatfit\Site\Core\Response;
 
-/**
- * Class LoginForm
- *
- * @author  Zura Sekhniashvili <zurasekhniashvili@gmail.com>
- * @package app\models
- */
 class LoginForm extends Model
 {
     public string $email = '';
@@ -20,7 +15,7 @@ class LoginForm extends Model
     public function rules()
     {
         return [
-            'email' => [self::RULE_REQUIRED],
+            'email' => [self::RULE_REQUIRED, self::RULE_EMAIL],
             'password' => [self::RULE_REQUIRED],
         ];
     }
@@ -28,23 +23,18 @@ class LoginForm extends Model
     public function labels()
     {
         return [
-            'email' => 'Your Email address',
-            'password' => 'Password'
+            'email' => 'Email:',
+            'password' => 'Password:'
         ];
     }
 
     public function login()
     {
-        $user = User::findOne(['email' => $this->email]);
-        if (!$user) {
-            $this->addError('email', 'User does not exist with this email address');
+        $user = User::getUser($this->email, $this->password);
+        if ($user->value == null && $user->code != 200) {
+            Application::$app->session->setFlash('error', $user->message);
             return false;
         }
-        if (!password_verify($this->password, $user->password)) {
-            $this->addError('password', 'Password is incorrect');
-            return false;
-        }
-
         return Application::$app->login($user);
     }
 }

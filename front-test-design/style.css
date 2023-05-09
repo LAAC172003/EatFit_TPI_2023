@@ -239,11 +239,11 @@ img {
 }
 
 .recipe-detail {
-    background-color: #444; /* Un peu moins foncé que le fond du body */
+    background-color: #d6d0c6;
     border-radius: 5px;
     padding: 2rem;
     margin-top: 2rem;
-    margin-bottom: 2rem;
+    margin-bottom: 5rem;
     color: #eee; /* Changez la couleur du texte pour une meilleure lisibilité */
 }
 

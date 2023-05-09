@@ -11,7 +11,7 @@ class Request
     /**
      * Récupère la méthode HTTP utilisée pour la requête.
      *
-     * @return string
+     * @return string La méthode HTTP utilisée.
      */
     public function getMethod(): string
     {
@@ -21,24 +21,26 @@ class Request
     /**
      * Récupère l'URL de la requête.
      *
-     * @return string
+     * @return string L'URL de la requête.
      */
     public function getUrl(): string
     {
+        // Récupérer l'URI de la requête
         $path = $_SERVER['REQUEST_URI'];
+        // Vérifier si l'URI contient un '?', ce qui signifie des paramètres de requête
         $position = strpos($path, '?');
+        // Si des paramètres de requête sont présents, ne conserver que la partie de l'URI avant les paramètres de requête
         if ($position !== false) {
             $path = substr($path, 0, $position);
         }
-
         return $path;
     }
 
     /**
      * Définit les paramètres de la route associée à la requête.
      *
-     * @param array $params
-     * @return self
+     * @param array $params Les paramètres de la route.
+     * @return self Une référence à l'objet courant, permettant le chaînage des méthodes.
      */
     public function setRouteParams(array $params): self
     {
@@ -49,7 +51,7 @@ class Request
     /**
      * Récupère tous les paramètres de la route associée à la requête.
      *
-     * @return array
+     * @return array Les paramètres de la route.
      */
     public function getRouteParams(): array
     {
@@ -59,9 +61,9 @@ class Request
     /**
      * Récupère la valeur d'un paramètre de la route associée à la requête.
      *
-     * @param string $param
-     * @param mixed|null $default
-     * @return mixed
+     * @param string $param Le nom du paramètre de la route.
+     * @param mixed|null $default La valeur par défaut à retourner si le paramètre n'existe pas.
+     * @return mixed La valeur du paramètre de la route, ou la valeur par défaut si le paramètre n'existe pas.
      */
     public function getRouteParam(string $param, mixed $default = null): mixed
     {
@@ -71,7 +73,7 @@ class Request
     /**
      * Récupère le corps de la requête HTTP.
      *
-     * @return mixed
+     * @return mixed Le corps de la requête HTTP.
      */
     private function getBody(): mixed
     {
@@ -84,7 +86,7 @@ class Request
      * Si un champ obligatoire est manquant, une exception est levée avec un code HTTP 400 (Bad Request).
      *
      * @param array|null $requiredFields Un tableau contenant les noms des champs obligatoires dans le corps de la requête.
-     * @param bool $requireAllFields
+     * @param bool $requireAllFields Un booléen indiquant si tous les champs sont requis.
      * @return array Les données du corps de la requête sous forme d'array associatif.
      * @throws Exception Si les données sont manquantes, invalides, ou si un champ obligatoire est manquant.
      */
@@ -100,11 +102,11 @@ class Request
     /**
      * Valide les données reçues dans le corps de la requête HTTP.
      *
-     * @param array $fields
-     * @param array|null $requiredFields
-     * @param bool $requireAllFields
-     * @param string $parentKey
-     * @throws Exception
+     * @param array $fields Les champs à valider.
+     * @param array|null $requiredFields Les champs requis.
+     * @param bool $requireAllFields Un booléen indiquant si tous les champs sont requis.
+     * @param string $parentKey La clé parente pour les champs imbriqués.
+     * @throws Exception Si les données sont invalides.
      */
     private function validateData(array $fields, array $requiredFields = null, bool $requireAllFields = true, $parentKey = ''): void
     {
@@ -115,33 +117,43 @@ class Request
             $extraFields = array_diff(array_keys($fields), array_keys($requiredFields));
 
             foreach ($requiredFields as $field => $nestedFields) {
+                // Si le champ est un tableau...
                 if (is_array($nestedFields)) {
+                    // Si le champ existe et est un tableau, valide les champs imbriqués
                     if (array_key_exists($field, $fields) && is_array($fields[$field])) {
                         $this->validateData($fields[$field], $nestedFields, $requireAllFields, $parentKey . $field . '.');
+                        // Supprime le champ de la liste des champs en trop
                         $extraFields = array_diff($extraFields, [$field]);
-                    } else if ($requireAllFields) $missingFields[] = $parentKey . $field;
+                    } else if ($requireAllFields) {
+                        // Si tous les champs sont requis et que le champ est manquant, ajoute-le à la liste des champs manquants
+                        $missingFields[] = $parentKey . $field;
+                    }
                 } else {
+                    // Si le champ n'est pas un tableau et est manquant, ajoute-le à la liste des champs manquants
                     if (!array_key_exists($nestedFields, $fields)) {
                         if ($requireAllFields) $missingFields[] = $parentKey . $nestedFields;
                     } else {
+                        // Si le champ existe, supprime-le de la liste des champs en trop
                         $extraFields = array_diff($extraFields, [$nestedFields]);
                     }
                 }
             }
 
             if (!empty($missingFields)) {
+                // Formate les champs autorisés pour les afficher dans le message d'erreur
                 $allowedFields = array_map(function ($key, $value) {
                     return is_array($value) ? $key : $value;
                 }, array_keys($requiredFields), $requiredFields);
 
+                // Formate les champs manquants pour les afficher dans le message d'erreur
                 $missingFieldsFormatted = array_map(function ($field) {
                     return str_replace(explode('.', $field)[0] . ".", '', $field);
                 }, $missingFields);
                 throw new Exception("Missing fields: " . implode(", ", $missingFieldsFormatted) . ". Allowed fields" . ($parentKey ? " in " . rtrim($parentKey, '.') : "") . " are: " . implode(", ", $allowedFields), 422);
             }
 
-
             if (!empty($extraFields)) {
+                // Formate les champs autorisés pour les afficher dans le message d'erreur
                 $allowedFields = array_map(function ($key, $value) {
                     return is_array($value) ? $key : $value;
                 }, array_keys($requiredFields), $requiredFields);

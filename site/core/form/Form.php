@@ -1,14 +1,6 @@
 <?php
-/**
- * User: TheCodeholic
- * Date: 7/9/2020
- * Time: 7:05 AM
- */
 
 namespace Eatfit\Site\Core\Form;
-
-
-
 use Eatfit\Site\Core\Model;
 
 class Form
@@ -28,9 +20,8 @@ class Form
         echo '</form>';
     }
 
-    public function field(Model $model, $attribute)
+    public function field(Model $model, $attribute): Field
     {
         return new Field($model, $attribute);
     }
-
 }

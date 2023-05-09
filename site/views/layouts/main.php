@@ -1,85 +1,114 @@
-<!doctype html>
-<html lang="en">
+<?php
+
+use Eatfit\Site\Core\Application;
+
+?>
+<!DOCTYPE html>
+<html lang="fr">
 <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eatfit</title>
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
-          integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet">
 
-    <link rel="stylesheet" href="/css/bootstrap.css">
-    <title><?php echo $this->title ?></title>
+    <!-- Styles -->
+    <link rel="stylesheet" type="text/css"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="#">Navbar</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-                <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/contact">Contact</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/about">About</a>
-            </li>
-        </ul>
-        <?php use Eatfit\Site\Core\Application;
-
-
-        if (Application::isGuest()): ?>
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item active">
-                    <a class="nav-link" href="/login">Login</a>
+<header>
+    <nav class="navbar navbar-expand-md navbar-dark">
+        <a class="navbar-brand font-weight-bold" href="/">Accueil</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link font-weight-bold" href="catalogue.php">Catalogue</a>
                 </li>
-                <li class="nav-item active">
-                    <a class="nav-link" href="/register">Register</a>
+                <li class="nav-item">
+                    <a class="nav-link font-weight-bold" href="catalogue.php">Catalogue</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link font-weight-bold" href="catalogue.php">Catalogue</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link font-weight-bold" href="catalogue.php">Catalogue</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link font-weight-bold" href="catalogue.php">Catalogue</a>
                 </li>
             </ul>
-        <?php else: ?>
             <ul class="navbar-nav ml-auto">
-                <li class="nav-item active">
-                    <a class="nav-link" href="/profile">
-                        Profile
-                    </a>
-                </li>
-                <li class="nav-item active">
-                    <a class="nav-link" href="/logout">
-                        Welcome <?php echo Application::$app->user->getDisplayName() ?> (Logout)
-                    </a>
-                </li>
-            </ul>
-        <?php endif; ?>
-    </div>
-</nav>
+                <?php
+                if (Application::isGuest()) {
+                    ?>
+                    <li class="nav-item">
+                        <a class="nav-link font-weight-bold" href="/login">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link font-weight-bold" href="/register">Inscription</a>
+                    </li>
+                    <?php
+                } else {
+                    ?>
+                    <li class="nav-item">
+                        <a class="nav-link font-weight-bold" href="/profile">Profil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link font-weight-bold" href="/logout">Se déconnecter</a>
+                    </li>
+                    <?php
+                }
+                ?>
 
-<div class="container">
-    <?php if (Application::$app->session->getFlash('success')): ?>
-        <div class="alert alert-success">
-            <p><?php echo Application::$app->session->getFlash('success') ?></p>
+            </ul>
         </div>
-    <?php endif; ?>
-    {{content}}
-</div>
+    </nav>
+</header>
 
-<!-- Optional JavaScript -->
-<!-- jQuery first, then Popper.js, then Bootstrap JS -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
-        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
-        crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
-        crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
-        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
-        crossorigin="anonymous"></script>
+<main>
+    <div class="container">
+        <?php
+
+        if (Application::$app->session->getFlash('success')): ?>
+            <div class="alert alert-success">
+                <p><?php echo Application::$app->session->getFlash('success') ?></p>
+            </div>
+        <?php endif; ?>
+        <?php
+
+        if (Application::$app->session->getFlash('error')): ?>
+            <div class="alert alert-danger">
+                <p><?php echo Application::$app->session->getFlash('error') ?></p>
+            </div>
+        <?php endif; ?>
+        {{content}}
+    </div>
+
+</main>
+<footer class="mt-auto">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <p class="text-center font-weight-bold">&copy; 2023 Boutique de casquettes</p>
+            </div>
+        </div>
+    </div>
+    </div>
+</footer>
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<script src="/js/home.js"></script>
+<!--<script s></script>-->
 </body>
 </html>

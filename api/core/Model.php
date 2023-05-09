@@ -73,14 +73,15 @@ abstract class Model
      * @param array $data Les données à inclure dans le JWT
      * @return string Le JWT généré
      */
-    protected static function generateJWT(array $data): string
+    protected static function generateJWT(array $data, $expiration = null): string
     {
+        if ($expiration == null) $expiration = time() + (2 * 3600);
         $salt = $_ENV['SALT'] ?? "";
         $header = ['alg' => 'HS256', 'typ' => 'JWT'];
         $payload = [
             'email' => $data['email'],
             'username' => $data['username'],
-            'exp' => time() + (2 * 3600),
+            'exp' => $expiration,
         ];
         $encodedHeader = self::urlEncode(json_encode($header));
         $encodedPayload = self::urlEncode(json_encode($payload));
@@ -109,9 +110,9 @@ abstract class Model
      * @return array|null Les informations de l'utilisateur, ou null si l'utilisateur n'est pas trouvé
      * @throws Exception Si le jeton est invalide
      */
-    protected static function getUserByToken(): ?array
+    protected static function getUserByToken($expiration = true): ?array
     {
-        $data = self::isTokenValid();
+        $data = self::isTokenValid($expiration);
         $user = User::getUser($data['payload']['email'])->getFirstRow();
         if (!$user) throw new Exception("User not found", 404);
         unset($user['password']);

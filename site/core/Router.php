@@ -6,12 +6,6 @@ namespace Eatfit\Site\Core;
 
 use Eatfit\Site\Core\Exception\NotFoundException;
 
-/**
- * Class Router
- *
- * @author  Zura Sekhniashvili <zurasekhniashvili@gmail.com>
- * @package thecodeholic\mvc
- */
 class Router
 {
     private Request $request;
@@ -24,10 +18,11 @@ class Router
         $this->response = $response;
     }
 
-    public function get(string $url, $callback)
+    public function get(string $url, $callback): void
     {
         $this->routeMap['get'][$url] = $callback;
     }
+
 
     public function post(string $url, $callback)
     {
@@ -35,6 +30,7 @@ class Router
     }
 
     /**
+     * @param $method
      * @return array
      */
     public function getRouteMap($method): array

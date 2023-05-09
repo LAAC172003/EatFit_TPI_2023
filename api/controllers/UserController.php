@@ -18,6 +18,14 @@ class UserController
     }
 
     /**
+     * @throws Exception
+     */
+    public static function getUserByToken(): ApiValue
+    {
+        return new ApiValue(User::getUserByToken(), 200);
+    }
+
+    /**
      *
      * @throws Exception
      */
