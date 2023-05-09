@@ -121,8 +121,8 @@ class Router
         return Application::$app->view->renderView($view, $params);
     }
 
-    public function renderViewOnly($view, $params = [])
-    {
-        return Application::$app->view->renderViewOnly($view, $params);
-    }
+//    public function renderViewOnly($view, $params = [])
+//    {
+//        return Application::$app->view->renderViewOnly($view, $params);
+//    }
 }

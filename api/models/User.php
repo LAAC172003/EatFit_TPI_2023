@@ -38,7 +38,6 @@ class User extends Model
     public static function create(array $data): array|Exception
     {
         //a revoir
-
         $email = filter_var($data['email'], FILTER_VALIDATE_EMAIL);
         if (!$email) throw new Exception("Invalid email", 400);
         $data = self::filterArray($data);
@@ -49,7 +48,7 @@ class User extends Model
             'username' => $data['username'],
             'email' => $email,
             'password' => password_hash($data['password'], PASSWORD_DEFAULT),
-            'token' => self::generateJWT($data),
+            'token' => self::generateJWT($data,),
             'expiration' => time() + (2 * 3600)
         ];
         try {
@@ -120,7 +119,6 @@ class User extends Model
         try {
             Application::$app->db->execute("DELETE FROM users WHERE idUser = :idUser", [":idUser" => $idUser]);
         } catch (Exception $e) {
-            var_dump($e);
             throw new Exception("Error deleting user", 500);
         }
         return "User deleted successfully";
@@ -151,7 +149,6 @@ class User extends Model
      */
     public static function authenticate(array $data): array|Exception
     {
-
         $email = filter_var($data['email'], FILTER_VALIDATE_EMAIL);
         $password = filter_var($data['password'], FILTER_SANITIZE_SPECIAL_CHARS);
         if (!$email || !$password) throw new Exception("Invalid email or password", 400);

@@ -283,27 +283,15 @@ class Recipe extends Model
     public static function addToHistory(array $data): string
     {
         $user = self::getUserByToken();
-        if (!$user) {
-            throw new Exception("Unauthorized", 401);
-        }
-
-        if (!isset($data['recipe_id'])) {
-            throw new Exception("Recipe ID is required", 400);
-        }
-
-        $recipe = self::getRecipeById($data['recipe_id']);
-
-        if (!$recipe) {
-            throw new Exception("Recipe not found", 404);
-        }
-
-        $date = date("Y - m - d") ?? $data['date'];
-
+        if (!$user) throw new Exception("Unauthorized", 401);
+        if (!is_numeric($data['idRecipe'])) throw new Exception("Recipe ID must be numeric", 400);
+        $recipe = self::getRecipeById($data['idRecipe']);
+        if (!$recipe) throw new Exception("Recipe not found", 404);
         try {
-            Application::$app->db->execute("INSERT INTO consumed_recipes(user_id, recipe_id, date) VALUES(:user_id, :recipe_id, :date)", [
-                ":user_id" => $user['idUser'],
-                ":recipe_id" => $data['recipe_id'],
-                ":date" => $date
+            Application::$app->db->execute("INSERT INTO consumed_recipes(idUser, idRecipe, consumption_date) VALUES(:idUser, :idRecipe, :consumption_date)", [
+                ":idUser" => $user['idUser'],
+                ":idRecipe" => $data['recipe_id'],
+                ":consumption_date" => date("Y-m-d")
             ]);
         } catch (Exception $e) {
             throw new Exception("Error adding recipe to history", 500);
@@ -313,16 +301,43 @@ class Recipe extends Model
     }
 
     /**
+     * Add a recipe to the user's history.
+     *
+     * @param array $data
+     * @return string
+     * @throws Exception
+     */
+    public static function deleteHistory(array $data): string
+    {
+        $user = self::getUserByToken();
+        if (!$user) throw new Exception("Unauthorized", 401);
+        if (!is_numeric($data['idRecipe'])) throw new Exception("Recipe ID must be numeric", 400);
+        if (isset($data['idRecipe'])) {
+            $recipe = self::getRecipeById($data['idRecipe']);
+            if (!$recipe) throw new Exception("Recipe not found", 404);
+            Application::$app->db->execute("DELETE FROM consumed_recipes WHERE idUser = :idUser AND idRecipe = :idRecipe", [
+                ":idUser" => $user['idUser'],
+                ":idRecipe" => $data['idRecipe']
+            ]);
+            return "Recette supprimée de l'historique avec succès";
+        }
+        Application::$app->db->execute("DELETE FROM consumed_recipes WHERE idUser = :idUser", [
+            ":idUser" => $user['idUser']
+        ]);
+        return "Historique supprimé avec succès";
+    }
+
+    /**
      * Retrieve a recipe by ID.
      *
-     * @param int $recipe_id
+     * @param int $idRecipe
      * @return array|null
      * @throws Exception
      */
-    private static function getRecipeById(int $recipe_id): ?array
+    private static function getRecipeById(int $idRecipe): ?array
     {
-        $query = "SELECT * FROM recipes WHERE idRecipe = :recipe_id";
-        $statement = Application::$app->db->execute($query, [":recipe_id" => $recipe_id]);
+        $query = "SELECT * FROM recipes WHERE idRecipe = :idRecipe";
+        $statement = Application::$app->db->execute($query, [":idRecipe" => $idRecipe]);
 
         return $statement->isEmpty() ? null : $statement->getFirstRow();
     }

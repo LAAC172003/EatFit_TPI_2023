@@ -56,4 +56,12 @@ class RecipeController
     {
         return new ApiValue(Recipe::delete($request->getData(["title"])), 200);
     }
+
+    /**
+     * @throws Exception
+     */
+    public function addHistory(Request $request): ApiValue
+    {
+        return new ApiValue(Recipe::addToHistory($request->getData(['idRecipe'])), 200);
+    }
 }

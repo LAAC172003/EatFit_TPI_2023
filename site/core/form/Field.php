@@ -14,6 +14,7 @@ class Field extends BaseField
     const TYPE_CHECKBOX = 'checkbox';
     const TYPE_RADIO = 'radio';
     protected array $attributes = [];
+    private array $options;
 
     /**
      * Field constructor.
@@ -42,6 +43,23 @@ class Field extends BaseField
         return $this->setType(self::TYPE_RADIO);
     }
 
+    public function passwordField(): self
+    {
+        return $this->setType(self::TYPE_PASSWORD);
+    }
+
+    public function numberField(): self
+    {
+        return $this->setType(self::TYPE_NUMBER);
+    }
+
+    public function selectField(array $options): self
+    {
+        $this->type = 'select';
+        $this->options = $options;
+        return $this;
+    }
+
     public function setAttributes(array $attributes): self
     {
         $this->attributes = $attributes;
@@ -65,7 +83,20 @@ class Field extends BaseField
                 $this->model->{$this->attribute}
             );
         }
+        if ($this->type === 'select') {
+            $optionsString = '';
+            foreach ($this->options as $value => $label) {
+                $optionsString .= sprintf('<option value="%s">%s</option>', $value, $label);
+            }
 
+            return sprintf('<select class="form-control%s" name="%s" %s %s>%s</select>',
+                $this->model->hasError($this->attribute) ? ' is-invalid' : '',
+                $this->attribute,
+                $placeholderText,
+                $additionalAttributes,
+                $optionsString
+            );
+        }
         return sprintf('<input type="%s" class="form-control%s" name="%s" value="%s" %s %s>',
             $this->type,
             $this->model->hasError($this->attribute) ? ' is-invalid' : '',
@@ -74,17 +105,9 @@ class Field extends BaseField
             $placeholderText,
             $additionalAttributes
         );
+
     }
 
-    public function passwordField(): self
-    {
-        return $this->setType(self::TYPE_PASSWORD);
-    }
-
-    public function numberField(): self
-    {
-        return $this->setType(self::TYPE_NUMBER);
-    }
 
     /**
      * @param string $placeholder

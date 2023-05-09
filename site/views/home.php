@@ -1,58 +1,8 @@
 <?php
-function getProducts()
-{
-    $dejeuner = [
-        "nomPlat" => "TEst3",
-        "categorie" => "dejeuner",
-        "description" => "test",
-        "ingredients" => [
-            "pain",
-            "jambon",
-            "fromage",
-            "oeuf",
-            "tomate",
-            "salade",
-            "mayonnaise"
-        ]
-    ];
-    $diner = [
-        "nomPlat" => "Tets2",
-        "description" => "test",
-        "categorie" => "diner",
-        "ingredients" => [
-            "qq",
-            "ww",
-            "fromage",
-            "oeuf",
-            "tomate",
-            "salade",
-            "mayonnaise"
-        ]
-    ];
-    $dessert = [
-        "nomPlat" => "Test",
-        "categorie" => "dessert",
-        "description" => "test",
-        "ingredients" => [
-            "paiddn",
-            "jambon",
-            "asd",
-            "oeuf",
-            "tomate",
-            "salade",
-            "mayonnaise"
-        ]
-    ];
-    $arrayProducts = [
-        "déjeuner" => $dejeuner,
-        "diner" => $diner,
-        "dessert" => $dessert
-    ];
-    return $arrayProducts;
-}
 
+/** @var $products  array */
 $j = 0;
-foreach (getProducts() as $key => $value) {
+foreach ($products as $key => $value) {
     ?>
     <div class="carousel-container">
         <h1><?= $value["categorie"] ?></h1>

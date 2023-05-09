@@ -38,29 +38,17 @@ class User extends Model
 
     public function save()
     {
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => 'http://eatfittpi2023api/user',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => '{
-                "username":"' . $this->username . '",
-                "email":"' . $this->email . '",
-                "password" : "' . $this->password . '",
-                "confirm_password" : "' . $this->password_confirm . '"
-            }',
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json'
-            ),
-        ));
-
-        $response = json_decode(curl_exec($curl));
-        curl_close($curl);
+        $response = self::getJsonResult([
+            'url' => 'register',
+            'method' => 'POST',
+            'data' => [
+                'username' => $this->username,
+                'email' => $this->email,
+                'password' => $this->password,
+                'password_confirm' => $this->password_confirm
+            ]
+        ]);
+        if (!$response) return false;
         if ($response->value == null || $response->code != 201) {
             Application::$app->session->setFlash('error', $response->message);
             Application::$app->response->statusCode($response->code);
@@ -74,36 +62,23 @@ class User extends Model
         return $response;
     }
 
-    public static function getUser($email, $password): object
+    public static function getUser($email, $password)
     {
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => 'http://eatfittpi2023api/login',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'PUT',
-            CURLOPT_POSTFIELDS => '{
-                "email":"' . $email . '",
-                "password":"' . $password . '"
-            }',
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json'
-            ),
-        ));
-        $response = curl_exec($curl);
-        curl_close($curl);
-        return json_decode($response);
+        return self::getJsonResult([
+            'url' => 'login',
+            'method' => 'PUT',
+            'data' => [
+                'email' => $email,
+                'password' => $password
+            ]
+        ]);
     }
 
     public static function getUserByToken($token)
     {
         $curl = curl_init();
         curl_setopt_array($curl, array(
-            CURLOPT_URL => 'http://eatfittpi2023api/userById',
+            CURLOPT_URL => Application::$API_URL . '/userById',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,

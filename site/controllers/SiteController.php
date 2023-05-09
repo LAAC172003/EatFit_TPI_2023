@@ -10,10 +10,64 @@ use Eatfit\Site\Core\Request;
 use Eatfit\Site\Core\Response;
 use Eatfit\Site\Models\LoginForm;
 use Eatfit\Site\models\ProfileModel;
+use Eatfit\Site\Models\Recipe;
 use Eatfit\Site\Models\User;
 
 class SiteController extends Controller
 {
+
+    function getProducts()
+    {
+        $dejeuner = [
+            "nomPlat" => "TEst3",
+            "categorie" => "dejeuner",
+            "description" => "test",
+            "ingredients" => [
+                "pain",
+                "jambon",
+                "fromage",
+                "oeuf",
+                "tomate",
+                "salade",
+                "mayonnaise"
+            ]
+        ];
+        $diner = [
+            "nomPlat" => "Tets2",
+            "description" => "test",
+            "categorie" => "diner",
+            "ingredients" => [
+                "qq",
+                "ww",
+                "fromage",
+                "oeuf",
+                "tomate",
+                "salade",
+                "mayonnaise"
+            ]
+        ];
+        $dessert = [
+            "nomPlat" => "Test",
+            "categorie" => "dessert",
+            "description" => "test",
+            "ingredients" => [
+                "paiddn",
+                "jambon",
+                "asd",
+                "oeuf",
+                "tomate",
+                "salade",
+                "mayonnaise"
+            ]
+        ];
+        $arrayProducts = [
+            "déjeuner" => $dejeuner,
+            "diner" => $diner,
+            "dessert" => $dessert
+        ];
+        return $arrayProducts;
+    }
+
     public function __construct()
     {
         $this->registerMiddleware(new AuthMiddleware(['profile']));
@@ -21,8 +75,26 @@ class SiteController extends Controller
 
     public function home(): string
     {
+
         return $this->render('home', [
-            'name' => 'Lucas Almeida Costa'
+            'name' => 'Lucas Almeida Costa', 'products' => self::getProducts()
+        ]);
+    }
+
+    public function recipe(Request $request)
+    {
+        if (Application::isGuest()) Application::$app->response->redirect('/login');
+        $model = new Recipe();
+        if (Application::$app->request->isPost()) {
+            $model->loadData($request->getBody());
+//            if ($model->validate() && $model->save()) {
+//                Application::$app->session->setFlash('success', 'Recipe added');
+//                Application::$app->response->redirect('/recipe');
+//                return;
+//            }
+        }
+        return $this->render('add_recipe', [
+            'model' => $model
         ]);
     }
 
@@ -34,9 +106,7 @@ class SiteController extends Controller
 
     public function login(Request $request)
     {
-//        echo '<pre>';
-//        var_dump($request->getBody(), $request->getRouteParam('id'));
-//        echo '</pre>';
+        if (!Application::isGuest()) Application::$app->response->redirect('/');
         $loginForm = new LoginForm();
 
         if ($request->getMethod() === 'post') {
@@ -46,33 +116,33 @@ class SiteController extends Controller
                 Application::$app->response->redirect('/');
             }
         }
-//        $this->setLayout('auth');
         return $this->render('login', [
             'model' => $loginForm
         ]);
     }
 
-    public function register(Request $request, Response $response): string
+    public function register(Request $request): string
     {
+        if (!Application::isGuest()) Application::$app->response->redirect('/');
         $registerModel = new User();
         if ($request->getMethod() === 'post') {
             $registerModel->loadData($request->getBody());
             $result = $registerModel->save();
             if ($registerModel->validate() && $result) {
-                Application::$app->login($result);
                 Application::$app->session->setFlash('success', $result->message);
+                Application::$app->response->redirect('/');
+                Application::$app->login($result);
             }
-            $response->redirect('/');
         }
         return $this->render('register', [
             'model' => $registerModel
         ]);
     }
 
-    public function logout(Request $request, Response $response)
+    public function logout()
     {
         Application::$app->logout();
-        $response->redirect('/');
+        Application::$app->response->redirect('/');
     }
 
     public function contact()

@@ -99,4 +99,32 @@ class Model
         $errors = $this->errors[$attribute] ?? [];
         return $errors[0] ?? '';
     }
+
+    protected static function getJsonResult($data, $addBearer = false)
+    {
+        if (!isset($data['data']) || !isset($data['method']) || !isset($data['url'])) return false;
+        $http_header[] = 'Content-Type: application/json';
+        if ($addBearer) $http_header[] = 'Authorization: Bearer ' . Application::$app->user->token;
+        $curl = curl_init();
+
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => Application::$API_URL . $data['url'],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => $data['method'],
+            CURLOPT_POSTFIELDS => json_encode($data['data']),
+            CURLOPT_HTTPHEADER => $http_header,
+        ));
+
+
+        $response = curl_exec($curl);
+
+        curl_close($curl);
+        return json_decode($response);
+
+    }
 }

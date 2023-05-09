@@ -36,11 +36,12 @@ $app->router->get('/test', function (): ApiValue {
 });
 
 $app->router->put('/login', [UserController::class, 'login']);// get Useret User
-
-$app->router->get('/user', [UserController::class, 'read']);// get User
-
 $app->router->get('/userById', [UserController::class, 'getUserByToken']);// get User
 
+$app->router->post('history', [RecipeController::class, 'addHistory']);// get User
+
+
+$app->router->get('/user', [UserController::class, 'read']);// get User
 $app->router->post('/user', [UserController::class, 'create']);// get User
 $app->router->put('/user', [UserController::class, 'update']);// get User
 $app->router->delete('/user', [UserController::class, 'delete']);// get User

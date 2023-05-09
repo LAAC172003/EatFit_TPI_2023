@@ -9,7 +9,7 @@ use Eatfit\Site\Models\User;
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $config = [
-    'userClass' => User::class,
+    'API_URL' => "http://eatfittpi2023/"
 ];
 
 $app = new Application(dirname(__DIR__), $config);
@@ -23,6 +23,9 @@ $app->router->post('/login', [SiteController::class, 'login']);
 
 $app->router->get('/profile', [SiteController::class, 'profile']);
 $app->router->post('/profile/{method}/', [SiteController::class, 'profile']);
+
+$app->router->get('/recipe', [SiteController::class, 'recipe']);
+$app->router->post('/recipe', [SiteController::class, 'recipe']);
 
 
 $app->router->get('/register', [SiteController::class, 'register']);

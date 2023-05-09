@@ -15,7 +15,7 @@ class Application
 
     public static Application $app;
     public static string $ROOT_DIR;
-    public string $userClass;
+    public static string $API_URL;
     public string $layout = 'main';
     public Router $router;
     public Request $request;
@@ -28,7 +28,7 @@ class Application
     public function __construct($rootDir, $config)
     {
         $this->user = null;
-        $this->userClass = $config['userClass'];
+        self::$API_URL = $config['API_URL'];
         self::$ROOT_DIR = $rootDir;
         self::$app = $this;
         $this->request = new Request();
@@ -37,9 +37,13 @@ class Application
         $this->session = new Session();
         $this->view = new View();
         $token = Application::$app->session->get('user');
+
         if ($token != null) {
             $user = User::getUserByToken($token);
-            $this->user = $user->value;
+            if (isset($user->value->token) == null && isset($user->value->expiration) == null) {
+                $this->session->setFlash("error", "Votre session a expiré, veuillez vous reconnecter");
+                $this->logout();
+            } else $this->user = $user->value;
         }
     }
 
@@ -48,7 +52,7 @@ class Application
         return !self::$app->user;
     }
 
-    public function login($user): true
+    public function login($user)
     {
         Application::$app->session->set('user', $user->value->token);
         $this->response->statusCode($user->code);
