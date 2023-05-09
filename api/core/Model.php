@@ -41,9 +41,9 @@ abstract class Model
     {
         $data = self::decodeJWT(self::getToken());
         if (!User::getUser($data['payload']['email'])) throw new Exception("User not found", 404);
-        if (self::isTokenExpired($data['payload']['exp'])) Application::$app->db->execute("UPDATE users SET token = NULL, expiration = NULL WHERE email = :email", [":email" => $data['payload']['email']]);
-        if ($expiration) {
-            if (self::isTokenExpired($data['payload']['exp'])) {
+        if (self::isTokenExpired($data['payload']['exp'])) {
+            Application::$app->db->execute("UPDATE users SET token = NULL, expiration = NULL WHERE email = :email", [":email" => $data['payload']['email']]);
+            if ($expiration) {
                 throw new Exception("Token expired/invalid", 498);
             }
         }

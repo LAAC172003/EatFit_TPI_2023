@@ -64,4 +64,12 @@ class RecipeController
     {
         return new ApiValue(Recipe::addToHistory($request->getData(['idRecipe'])), 200);
     }
+
+    /**
+     * @throws Exception
+     */
+    public function addFoodType(Request $request): ApiValue
+    {
+        return new ApiValue(Recipe::addFoodType($request->getData(['name'], false)), 201);
+    }
 }

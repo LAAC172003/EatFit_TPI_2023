@@ -47,7 +47,6 @@ $app->router->put('/user', [UserController::class, 'update']);// get User
 $app->router->delete('/user', [UserController::class, 'delete']);// get User
 
 $app->router->get('/recipe', [RecipeController::class, 'read']);// get User
-//$app->router->get('/recipe/{search}/{filter}', [RecipeController::class, 'read']);// get User
 $app->router->post('/recipe', [RecipeController::class, 'create']);// get User
 $app->router->put('/recipe', [RecipeController::class, 'update']);// get User
 $app->router->delete('/recipe', [RecipeController::class, 'delete']);// get User
@@ -57,4 +56,5 @@ $app->router->post('/rating', [RatingController::class, 'create']);// get User
 $app->router->put('/rating', [RatingController::class, 'update']);// get User
 $app->router->delete('/rating', [RatingController::class, 'delete']);// get User
 
+$app->router->post('/food_type', [RecipeController::class, 'addFoodType']);// get User
 $app->run();

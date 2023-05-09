@@ -11,6 +11,9 @@ class Recipe extends Model
 {
     /**
      * Retrieve a recipe or all recipes based on the given data.
+     * If no specific recipe title is provided in search filters, all recipes are returned.
+     * Otherwise, it returns the specific recipe matching the title.
+     * Throws an exception if no recipe matches the title.
      *
      * @param array $data
      * @return array|null
@@ -340,6 +343,21 @@ class Recipe extends Model
         $statement = Application::$app->db->execute($query, [":idRecipe" => $idRecipe]);
 
         return $statement->isEmpty() ? null : $statement->getFirstRow();
+    }
+
+    /**
+     * @throws Exception
+     */
+    public static function addFoodType(array $data)
+    {
+        $user = self::getUserByToken();
+        if (!$user) throw new Exception("Unauthorized", 401);
+        try {
+            Application::$app->db->execute("INSERT INTO food_types(name) VALUES(:name)", [":name" => $data['name']]);
+        } catch (Exception $e) {
+            throw new Exception("Error adding food type", 500);
+        }
+        return "Food type added successfully";
     }
 
 

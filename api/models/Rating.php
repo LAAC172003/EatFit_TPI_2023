@@ -11,7 +11,10 @@ use http\Encoding\Stream\Inflate;
 class Rating extends Model
 {
     /**
-     * @throws Exception
+     * Méthode pour lire toutes les évaluations de la base de données.
+     *
+     * @return array La liste de toutes les évaluations.
+     * @throws Exception Si une erreur se produit lors de l'exécution de la requête.
      */
     public static function read(): array
     {
@@ -19,7 +22,11 @@ class Rating extends Model
     }
 
     /**
-     * @throws \Exception
+     * Méthode pour créer une nouvelle évaluation.
+     *
+     * @param array $data Les données de l'évaluation à créer.
+     * @return array L'évaluation créée.
+     * @throws \Exception Si une erreur se produit lors de la validation des données ou de l'exécution de la requête.
      */
     public static function create(array $data): array
     {
@@ -44,7 +51,11 @@ class Rating extends Model
 
 
     /**
-     * @throws Exception
+     * Méthode pour mettre à jour une évaluation existante.
+     *
+     * @param array $data Les données de l'évaluation à mettre à jour.
+     * @return string Un message indiquant que l'évaluation a été mise à jour avec succès.
+     * @throws Exception Si une erreur se produit lors de la validation des données ou de l'exécution de la requête.
      */
     public
     static function update(array $data): string
@@ -72,10 +83,13 @@ class Rating extends Model
     }
 
     /**
-     * @throws Exception
+     * Méthode pour supprimer une évaluation existante.
+     *
+     * @param array $data Les données de l'évaluation à supprimer.
+     * @return string Un message indiquant que l'évaluation a été supprimée avec succès.
+     * @throws Exception Si une erreur se produit lors de la validation des données ou de l'exécution de la requête.
      */
-    public
-    static function delete(array $data): string
+    public static function delete(array $data): string
     {
         $data = self::filterArray($data);
         if (!isset($data['idRating'])) throw new Exception("Rating id is required", 400); else if (!is_numeric($data['idRating'])) throw new Exception("Rating id must be a number", 400);
@@ -90,7 +104,11 @@ class Rating extends Model
     }
 
     /**
-     * @throws Exception
+     * Méthode pour obtenir une évaluation spécifique par son identifiant.
+     *
+     * @param $idRating L'identifiant de l'évaluation à obtenir.
+     * @return SqlResult Le résultat de la requête SQL.
+     * @throws Exception Si une erreur se produit lors de l'exécution de la requête.
      */
     public static function getRatingById($idRating): SqlResult
     {

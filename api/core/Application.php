@@ -29,7 +29,6 @@ class Application
         $this->config = $config;
 
     }
-
     /**
      * Se connecte à la base de données.
      */
