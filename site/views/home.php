@@ -1,6 +1,6 @@
 <?php
-
 /** @var $products  array */
+
 $j = 0;
 foreach ($products as $key => $value) {
     ?>

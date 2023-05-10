@@ -69,7 +69,7 @@ class User extends Model
     public static function update(array $data): array|string
     {
         $token = null;
-        $dataToken = self::isTokenValid(false);
+        $dataToken = self::getDataToken(false);
         $user = self::getUser($dataToken['payload']['email']);
         if ($user->isEmpty()) throw new Exception("User not found", 404);
         $idUser = $user->getFirstRow()['idUser'];
@@ -112,7 +112,7 @@ class User extends Model
      */
     public static function delete(): string
     {
-        $dataToken = self::isTokenValid(false);
+        $dataToken = self::getDataToken(false);
         $user = self::getUser($dataToken['payload']['email']);
         if ($user->isEmpty()) throw new Exception("User not found", 404);
         $idUser = $user->getFirstRow()['idUser'];

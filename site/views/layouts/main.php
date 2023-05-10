@@ -98,7 +98,7 @@ use Eatfit\Site\Core\Application;
     <div class="container">
         <div class="row">
             <div class="col-md-12">
-                <p class="text-center font-weight-bold">&copy; 2023 Boutique de casquettes</p>
+                <p class="text-center font-weight-bold">&copy; 2023 Eatfit</p>
             </div>
         </div>
     </div>

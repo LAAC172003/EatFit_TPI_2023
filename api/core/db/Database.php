@@ -54,4 +54,19 @@ class Database
     {
         return self::$pdo->lastInsertId();
     }
+
+    public function beginTransaction(): void
+    {
+        self::$pdo->beginTransaction();
+    }
+
+    public function commit(): void
+    {
+        self::$pdo->commit();
+    }
+
+    public function rollBack(): void
+    {
+        self::$pdo->rollBack();
+    }
 }

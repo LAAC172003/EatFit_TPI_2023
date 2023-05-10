@@ -2,6 +2,7 @@
 
 namespace Eatfit\Api\Models;
 
+use DateTime;
 use Eatfit\Api\Core\Application;
 use Eatfit\Api\Core\Db\SqlResult;
 use Eatfit\Api\Core\Model;
@@ -21,17 +22,28 @@ class Recipe extends Model
      */
     public static function read(array $data): ?array
     {
-//        if (isset($data['search_filters'])) {
-//            $searchFilter = null;
-//            foreach ($data['search_filters'] as $key => $value) {
-//                if (!empty($value)) $searchFilter[$key] = $value;
-//            }
-//            return self::search($searchFilter);
-//        }
+        if (isset($data['idRecipe'])) {
+            $recipe = self::getRecipeById($data['idRecipe']);
+            if ($recipe == null) throw new Exception("Recipe not found", 404);
+            return $recipe;
+        }
+        if (!isset($data['search'])) {
 
-        if (!isset($data['search_filters']['title'])) return self::getAllRecipes();
-        if (self::getRecipe($data['search_filters']['title'])->isEmpty()) throw new Exception("Recipe not found", 404);
-        return self::getRecipe($data['title'])->getFirstRow();
+            if (isset($data['filter'])) {
+//Faire verif pour pas creer de problemes
+                if ($data['filter'][0] == 'category') return self::filter($data['filter'][1])->getValues();
+                if ($data['filter'][0] == 'food_type') return self::filter(null, $data['filter'][1])->getValues();
+            }
+            return self::getAllRecipes();
+        }
+
+        try {
+            $recipe = self::search($data['search']);
+        } catch (Exception $e) {
+            throw new Exception("Error searching for recipe: " . $e->getMessage(), 500);
+        }
+        if ($recipe->isEmpty()) throw new Exception("Recipe not found", 404);
+        return $recipe->getValues();
     }
 
     /**
@@ -45,74 +57,124 @@ class Recipe extends Model
     {
         $user = self::getUserByToken();
         if (!$user) throw new Exception("Unauthorized", 401);
-//        if (!self::getRecipe($data['title'])->isEmpty()) throw new Exception("Recipe already exists", 400);
-        $data = self::filterArray($data);
-        if (isset($data['category'])) if (!in_array($data['category'], ["Breakfast", "Appetizer", "Lunch", "Dinner", "Snack", "Dessert"])) throw new Exception("Invalid category, the categories allowed are : Breakfast, Appetizer, Lunch, Dinner, Snack, Dessert", 400);
+        self::validateRecipeData($data);
+        $data = [
+            'title' => $data['title'],
+            'preparation_time' => $data['preparation_time'],
+            'difficulty' => $data['difficulty'],
+            'instructions' => $data['instructions'],
+            'calories' => $data['calories'],
+            'created_at' => date("Y-m-d H:i:s"),
+            'image' => $data['image'],
+            'category' => $data['category'],
+            'idUser' => $user['idUser'],
+            'food_type' => $data['food_type']
+        ];
         try {
-            $data = [
-                'title' => $data['title'],
-                'preparation_time' => $data['preparation_time'],
-                'difficulty' => $data['difficulty'],
-                'instructions' => $data['instructions'],
-                'calories' => $data['calories'],
-                'created_at' => date("Y-m-d H:i:s"),
-                'image' => $data['image'],
-                'category' => $data['category'],
-                'idUser' => $user['idUser']
-            ];
-
-            Application::$app->db->execute("INSERT INTO images (path) VALUES (:path)", [":path" => $data['image']]);
-
-
-            Application::$app->db->execute("INSERT INTO recipes 
-            (title, preparation_time, difficulty, instructions, calories,created_at,idUser)
-            VALUES (:title, :preparation_time, :difficulty, :instructions, :calories,:created_at,:idUser)",
-                [
-                    ":title" => $data['title'],
-                    ":preparation_time" => $data['preparation_time'],
-                    ":difficulty" => $data['difficulty'],
-                    ":instructions" => $data['instructions'],
-                    ":calories" => $data['calories'],
-                    ":created_at" => $data['created_at'],
-                    ":idUser" => $data['idUser']
-                ]);
-            Application::$app->db->execute("INSERT INTO recipe_categories (idRecipe, idCategory) VALUES ((SELECT idRecipe FROM recipes WHERE title = :title), (SELECT idCategory FROM categories WHERE name = :name))", [":title" => $data['title'], ":name" => $data['category']]);
-            Application::$app->db->execute(
-                "INSERT INTO recipes_images (idRecipe, idImage) VALUES ((SELECT idRecipe FROM recipes WHERE title = :title), (SELECT idImage FROM images WHERE path = :path))",
-                [":title" => $data['title'], ":path" => $data['image']]);
+            Application::$app->db->beginTransaction();
+            self::insertRecipe($data, $user);
+            self::insertRecipeCategories($data);
+            self::insertRecipeFoodType($data);
+            self::insertRecipeImages($data);
+            Application::$app->db->commit();
         } catch (Exception $e) {
-            var_dump($e);
-            throw new Exception("Error creating new recipe", 500);
+            Application::$app->db->rollBack();
+            throw new Exception("Error creating new recipe: " . $e->getMessage(), 500);
         }
+
         return self::getRecipe($data['title'])->getFirstRow();
     }
 
     /**
-     * Create a connection between a recipe and food types.
-     *
-     * @param array $data
-     * @return string
      * @throws Exception
      */
-    public static function createFoodTypeConnection(array $data): string
+    private static function validateRecipeData(array $data): void
     {
-        if (self::getRecipe($data['wanted_recipe_title'])->getFirstRow()['idUser'] != self::getUserByToken()['idUser']) throw new Exception("Unauthorized", 401);
-        try {
-            $data = [
-                'title' => "test",
-                'idsFoodType' => [1, 2, 3, 4],
-                'percentage' => [10, 20, 30, 40],
-            ];
-            $query = "INSERT INTO recipe_food_type(idRecipe, idFoodType, percentage) VALUES ";
-            $query .= str_repeat("((SELECT idRecipe FROM recipes WHERE title = :title), :idFoodType, :percentage),", count($data['idsFoodType']));
-            //Je sais pas si ça marche
-            Application::$app->db->execute($query, [":title" => $data['title'], ":idFoodType" => $data['idsFoodType'], ":percentage" => $data['percentage']]);
-        } catch (Exception $e) {
-            throw new Exception("Error creating new recipe", 500);
+        $data = self::filterArray($data);
+        if (!self::getRecipe($data['title'])->isEmpty()) throw new Exception("Recipe already exists", 400);
+        $categories = Application::$app->db->execute("SELECT * FROM categories")->getColumn("name");
+        $food_types = Application::$app->db->execute("SELECT * FROM food_types")->getColumn("name");
+        if (!is_numeric($data['preparation_time'])) throw new Exception("Invalid preparation time '" . $data['preparation_time'] . "' , the preparation time must be a number", 400);
+        if ($data['difficulty'] != "easy" && $data['difficulty'] != "medium" && $data['difficulty'] != "hard") throw new Exception("Invalid difficulty '" . $data['difficulty'] . "' , the difficulties allowed are : easy, medium, hard", 400);
+        if (!in_array($data['category'], $categories)) throw new Exception("Invalid category '" . $data['category'] . "' , the categories allowed are : " . implode(", ", $categories), 400);
+        if (!is_array($data['food_type'])) $data['food_type'] = [$data['food_type']]; //A revoir
+        $percentage = 0;
+        foreach ($data['food_type'] as $food_type) {
+            $percentage += $food_type[1];
+            if ($food_type[1] < 0 || $food_type[1] > 100) throw new Exception("Invalid percentage '" . $food_type[1] . "' , the percentage must be between 0 and 100", 400);
+            if (!in_array($food_type[0], $food_types)) throw new Exception("Invalid food type '$food_type[0]', the food types allowed are : " . implode(", ", $food_types), 400);
         }
-        return "Recette créée avec succès";
+        if ($percentage != 100) throw new Exception("The sum of the percentages must be equal to 100", 400);
     }
 
+    /**
+     * @throws Exception
+     */
+    private static function insertRecipe(array $data, array $user): void
+    {
+        Application::$app->db->execute("INSERT INTO recipes
+            (title, preparation_time, difficulty, instructions, calories,created_at,idUser)
+            VALUES (:title, :preparation_time, :difficulty, :instructions, :calories,:created_at,:idUser)",
+            [
+                ":title" => $data['title'],
+                ":preparation_time" => $data['preparation_time'],
+                ":difficulty" => $data['difficulty'],
+                ":instructions" => $data['instructions'],
+                ":calories" => $data['calories'],
+                ":created_at" => $data['created_at'],
+                ":idUser" => $data['idUser']
+            ]);
+    }
+
+    /**
+     * @throws Exception
+     */
+    private static function insertRecipeCategories(array $data): void
+    {
+        Application::$app->db->execute(
+            "INSERT INTO recipe_categories (idRecipe, idCategory) VALUES ((SELECT idRecipe FROM recipes WHERE title = :title), (SELECT idCategory FROM categories WHERE name = :name))",
+            [
+                ":title" => $data['title'],
+                ":name" => $data['category']]
+        );
+    }
+
+    /**
+     * @throws Exception
+     */
+    private static function insertRecipeFoodType(array $data): void
+    {
+        $values = [];
+        $parameters = [];
+        foreach ($data['food_type'] as $index => $food_type) {
+            $values[] = "((SELECT idRecipe FROM recipes WHERE title = :title), (SELECT idFoodType FROM food_types WHERE name = :name{$index}), :percentage{$index})";
+            $parameters[":name{$index}"] = $food_type[0];
+            $parameters[":percentage{$index}"] = $food_type[1];
+        }
+        $query = "INSERT INTO recipe_food_types (idRecipe, idFoodType, percentage) VALUES " . implode(", ", $values);
+        $parameters[":title"] = $data['title'];
+
+        Application::$app->db->execute($query, $parameters);
+
+    }
+
+    /**
+     * @throws Exception
+     */
+    private static function insertRecipeImages(array $data): void
+    {
+        if (is_array($data['image'])) {
+            foreach ($data['image'] as $image) {
+                Application::$app->db->execute(
+                    "SELECT insert_unique_image_name(:path, (SELECT idRecipe FROM recipes WHERE title = :title));",
+                    [":path" => $image, ":title" => $data['title']]);
+            }
+        } else {
+            Application::$app->db->execute(
+                "SELECT insert_unique_image_name(:path, (SELECT idRecipe FROM recipes WHERE title = :title));",
+                [":path" => $data['image'], ":title" => $data['title']]);
+        }
+    }
 
     /**
      * Update an existing recipe.
@@ -159,6 +221,7 @@ class Recipe extends Model
         if (self::getRecipe($data['title'])->getFirstRow()['idUser'] != self::getUserByToken()['idUser']) throw new Exception("Unauthorized", 401);
         if (self::getRecipe($data['title'])->isEmpty()) throw new Exception("Recipe not found", 404);
         try {
+            //Call procedure
             Application::$app->db->execute("DELETE FROM recipes WHERE title = :title", [":title" => $data['title']]);
         } catch (Exception $e) {
             throw new Exception("Error deleting recipe", 500);
@@ -197,85 +260,70 @@ class Recipe extends Model
     /**
      * Search recipes based on the provided filters.
      *
-     * @param array $filters
-     * @return array
+     * @param $search
+     * @return SqlResult
      * @throws Exception
      */
-    public static function search(array $filters): array
+    private static function search($search): SqlResult
     {
-        $query = "SELECT * FROM recipes WHERE 1 = 1";
-        $params = [];
-        if (isset($filters['title'])) {
-            $query .= " and title LIKE :title";
-            $params[':title'] = '%' . $filters['title'] . '%';
-        }
-
-        if (isset($filters['category'])) {
-            $query .= " and idCategory = (SELECT idCategory FROM categories WHERE name = :category)";
-            $params[':category'] = $filters['category'];
-        }
-
-        if (isset($filters['date_added'])) {
-            $query .= " and DATE(created_at) = :date_added";
-            $params[':date_added'] = $filters['date_added'];
-        }
-        try {
-            $statement = Application::$app->db->execute($query, $params);
-        } catch (Exception $e) {
-            var_dump($e);
-            throw new Exception("Error searching recipes", 500);
-        }
-
-        if ($statement->isEmpty()) throw new Exception("No recipes found", 404);
-
-        return $statement->getValues();
+        $date = DateTime::createFromFormat('Y-m-d', $search);
+        $isDate = $date && $date->format('Y-m-d') === $search;
+        $searchForText = "%{$search}%";
+        $searchForDate = $isDate ? $search : '';
+        $sql = "SELECT recipes.*, categories.name AS category_name FROM recipes 
+            JOIN recipe_categories ON recipes.idRecipe = recipe_categories.idRecipe 
+            JOIN categories ON recipe_categories.idCategory = categories.idCategory 
+            WHERE recipes.title LIKE :searchText OR categories.name LIKE :searchText OR DATE_FORMAT(recipes.created_at, '%Y-%m-%d') = :searchDate";
+        return Application::$app->db->execute($sql, [':searchText' => $searchForText, ':searchDate' => $searchForDate]);
     }
 
     /**
      * Filter recipes by category or food type.
      *
-     * @param array $filters
-     * @return array
+     * @param null $category
+     * @param null $foodType
+     * @return SqlResult
      * @throws Exception
      */
-    public static function filterByCategoryOrFoodType(array $filters): array
+    public static function filter($category = null, $foodType = null): SqlResult
     {
-        $query = "SELECT DISTINCT r .* FROM recipes r";
+        $sql = "SELECT 
+                recipes.*,
+                GROUP_CONCAT(DISTINCT categories.name) AS category_name,
+                GROUP_CONCAT(DISTINCT food_types.name) AS food_type_name
+            FROM 
+                recipes 
+            JOIN 
+                recipe_categories ON recipes.idRecipe = recipe_categories.idRecipe 
+            JOIN 
+                categories ON recipe_categories.idCategory = categories.idCategory 
+            JOIN 
+                recipe_food_types ON recipes.idRecipe = recipe_food_types.idRecipe
+            JOIN 
+                food_types ON recipe_food_types.idFoodType = food_types.idFoodType ";
+        $where = [];
         $params = [];
-
-        if (isset($filters['category'])) {
-            $query .= " INNER JOIN categories c ON r.idCategory = c.idCategory";
-            $query .= " AND c.name = :category";
-            $params[':category'] = $filters['category'];
+        if ($category !== null) {
+            $where[] = 'categories.name = :category';
+            $params[':category'] = $category;
         }
-
-        if (isset($filters['food_type'])) {
-            $query .= " INNER JOIN recipe_food_type rft ON r.idRecipe = rft.idRecipe";
-            $query .= " INNER JOIN food_types ft ON rft.idFoodType = ft.idFoodType";
-            $query .= " AND ft.name = :food_type";
-            $params[':food_type'] = $filters['food_type'];
+        if ($foodType !== null) {
+            $where[] = 'food_types.name = :foodType';
+            $params[':foodType'] = $foodType;
         }
-
-        $statement = Application::$app->db->execute($query, $params);
-
-        if ($statement->isEmpty()) {
-            throw new Exception("No recipes found", 404);
+        if (!empty($where)) {
+            $sql .= 'WHERE ' . implode(' AND ', $where) . ' ';
         }
-
-        return $statement->getValues();
+        $sql .= "GROUP BY recipes.idRecipe ";
+        try {
+            return Application::$app->db->execute($sql, $params);
+        } catch (Exception $e) {
+            var_dump($e);
+            throw new Exception("Error filtering recipes", 500);
+        }
     }
 
-////////////////////////////////////////////
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///          ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     /**
      * Add a recipe to the user's history.
      *
@@ -341,7 +389,6 @@ class Recipe extends Model
     {
         $query = "SELECT * FROM recipes WHERE idRecipe = :idRecipe";
         $statement = Application::$app->db->execute($query, [":idRecipe" => $idRecipe]);
-
         return $statement->isEmpty() ? null : $statement->getFirstRow();
     }
 
@@ -352,11 +399,8 @@ class Recipe extends Model
     {
         $user = self::getUserByToken();
         if (!$user) throw new Exception("Unauthorized", 401);
-        try {
-            Application::$app->db->execute("INSERT INTO food_types(name) VALUES(:name)", [":name" => $data['name']]);
-        } catch (Exception $e) {
-            throw new Exception("Error adding food type", 500);
-        }
+        if (!Application::$app->db->execute("SELECT * FROM food_types WHERE name = :name", [":name" => $data['name']])->isEmpty()) throw new Exception("Food type already exists", 400);
+        Application::$app->db->execute("INSERT INTO food_types(name) VALUES(:name)", [":name" => $data['name']]);
         return "Food type added successfully";
     }
 

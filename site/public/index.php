@@ -9,7 +9,7 @@ use Eatfit\Site\Models\User;
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $config = [
-    'API_URL' => "http://eatfittpi2023/"
+    'API_URL' => "http://eatfittpi2023api/"
 ];
 
 $app = new Application(dirname(__DIR__), $config);

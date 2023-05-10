@@ -62,24 +62,26 @@ class Recipe extends Model
         ], true);
     }
 
-    private function getRecipe($filter)
+    private function getRecipe($search)
     {
         return self::getJsonResult([
             'url' => 'recipe',
             'method' => 'GET',
             'data' => [
-                'search_filters' => [
-                    'title' => $filter,
-                    'category' => $filter,
-                    'date_added' => $filter
-                ],
-                'filter' => [
-                    'category' => $filter,
-                    'food_type' => $filter
-                ]
+                'search' => $search
             ]
         ], true);
     }
 
+    public function getRecipeByFilter($filter, $search)
+    {
+        return self::getJsonResult([
+            'url' => 'recipe',
+            'method' => 'GET',
+            'data' => [
+                'filter' => [$filter, $search]
+            ]
+        ], true);
+    }
 }
 

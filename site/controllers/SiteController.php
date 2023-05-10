@@ -16,58 +16,6 @@ use Eatfit\Site\Models\User;
 class SiteController extends Controller
 {
 
-    function getProducts()
-    {
-        $dejeuner = [
-            "nomPlat" => "TEst3",
-            "categorie" => "dejeuner",
-            "description" => "test",
-            "ingredients" => [
-                "pain",
-                "jambon",
-                "fromage",
-                "oeuf",
-                "tomate",
-                "salade",
-                "mayonnaise"
-            ]
-        ];
-        $diner = [
-            "nomPlat" => "Tets2",
-            "description" => "test",
-            "categorie" => "diner",
-            "ingredients" => [
-                "qq",
-                "ww",
-                "fromage",
-                "oeuf",
-                "tomate",
-                "salade",
-                "mayonnaise"
-            ]
-        ];
-        $dessert = [
-            "nomPlat" => "Test",
-            "categorie" => "dessert",
-            "description" => "test",
-            "ingredients" => [
-                "paiddn",
-                "jambon",
-                "asd",
-                "oeuf",
-                "tomate",
-                "salade",
-                "mayonnaise"
-            ]
-        ];
-        $arrayProducts = [
-            "déjeuner" => $dejeuner,
-            "diner" => $diner,
-            "dessert" => $dessert
-        ];
-        return $arrayProducts;
-    }
-
     public function __construct()
     {
         $this->registerMiddleware(new AuthMiddleware(['profile']));
@@ -75,9 +23,9 @@ class SiteController extends Controller
 
     public function home(): string
     {
-
+        $recipeModel = new Recipe();
         return $this->render('home', [
-            'name' => 'Lucas Almeida Costa', 'products' => self::getProducts()
+            'name' => 'Lucas Almeida Costa', 'model' => $recipeModel
         ]);
     }
 
@@ -100,6 +48,7 @@ class SiteController extends Controller
 
     public function detail()
     {
+
         return $this->render('recipe_details');
     }
 
@@ -185,14 +134,5 @@ class SiteController extends Controller
 
         // Si la requête est de type GET ou si la validation a échoué, afficher le formulaire.
         return $this->render('profile', ['model' => $profileModel, 'user' => Application::$app->user]);
-    }
-
-
-    public
-    function profileWithId(Request $request)
-    {
-        echo '<pre>';
-        var_dump($request->getBody());
-        echo '</pre>';
     }
 }

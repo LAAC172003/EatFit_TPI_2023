@@ -18,7 +18,11 @@ class RecipeController
      */
     public function read(Request $request): ApiValue
     {
-        return new ApiValue(Recipe::read($request->getData(["search_filters" => ["title", "category", "date_added"], "filter" => ["category", "food_type"]], false)), 200);
+        return new ApiValue(Recipe::read($request->getData([
+            'search',
+            'filter',
+            "idRecipe"
+        ], false)), 200);
     }
 
     /**
@@ -30,7 +34,16 @@ class RecipeController
      */
     public function create(Request $request): ApiValue
     {
-        return new ApiValue(Recipe::create($request->getData(["title", "preparation_time", "difficulty", "instructions", "calories", "image", "category"])), 201);
+        return new ApiValue(Recipe::create($request->getData([
+            "title",
+            "preparation_time",
+            "difficulty",
+            "instructions",
+            "calories",
+            "image",
+            "category",
+            "food_type"
+        ])), 201);
     }
 
     /**
@@ -70,6 +83,6 @@ class RecipeController
      */
     public function addFoodType(Request $request): ApiValue
     {
-        return new ApiValue(Recipe::addFoodType($request->getData(['name'], false)), 201);
+        return new ApiValue(Recipe::addFoodType($request->getData(['name'])), 201);
     }
 }

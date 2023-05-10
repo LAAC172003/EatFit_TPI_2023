@@ -39,13 +39,13 @@ class User extends Model
     public function save()
     {
         $response = self::getJsonResult([
-            'url' => 'register',
+            'url' => 'user',
             'method' => 'POST',
             'data' => [
                 'username' => $this->username,
                 'email' => $this->email,
                 'password' => $this->password,
-                'password_confirm' => $this->password_confirm
+                'confirm_password' => $this->password_confirm
             ]
         ]);
         if (!$response) return false;

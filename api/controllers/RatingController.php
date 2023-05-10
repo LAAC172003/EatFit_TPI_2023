@@ -15,7 +15,7 @@ class RatingController
     public function read(Request $request): ApiValue
     {
         //["search_filters" => ["title", "category", "date_added"], "filter" => "category", "food_type"]
-        return new ApiValue(Rating::read($request->getData(["search_filters" => ["title", "category", "date_added"], "filter" => ["category", "food_type"]], false)), 200);
+        return new ApiValue(Rating::read(), 200);
     }
 
     /**

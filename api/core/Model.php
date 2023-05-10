@@ -5,15 +5,19 @@ namespace Eatfit\Api\Core;
 
 use Eatfit\Api\Models\User;
 use Exception;
-use InvalidArgumentException;
 
 abstract class Model
 {
+    protected static function filterArray($array, $filter = FILTER_SANITIZE_SPECIAL_CHARS): array
+    {
 
-    public const REQUIRED_FIELDS = [
-        "login" => ['email', "password"],
-        "register" => ['email', "password", "username"]
-    ];
+        $filteredArray = array();
+        foreach ($array as $key => $value) {
+            if (is_array($value)) $filteredArray[$key] = self::filterArray($value, $filter);
+            else $filteredArray[$key] = filter_var($value, $filter);
+        }
+        return $filteredArray;
+    }
 
     /**
      * Récupère le jeton (token) d'authentification à partir des en-têtes de la requête.
@@ -24,9 +28,7 @@ abstract class Model
     private static function getToken(): string
     {
         $headers = getallheaders();
-        if (!isset($headers['Authorization'])) {
-            throw new Exception("Token expired/invalid", 498);
-        }
+        if (!isset($headers['Authorization'])) throw new Exception("Token expired/invalid", 498);
         return explode(" ", $headers['Authorization'])[1];
     }
 
@@ -37,7 +39,7 @@ abstract class Model
      * @throws Exception Si le jeton est invalide ou expiré
      * @return array Les données décodées du jeton
      */
-    protected static function isTokenValid(bool $expiration = true): array
+    protected static function getDataToken(bool $expiration = true): array
     {
         $data = self::decodeJWT(self::getToken());
         if (!User::getUser($data['payload']['email'])) throw new Exception("User not found", 404);
@@ -50,22 +52,13 @@ abstract class Model
         return $data;
     }
 
+
     /**
      * @throws Exception
      */
     protected static function isTokenExpired($expiration): bool
     {
         return $expiration < time() || $expiration === 'expired';
-    }
-
-    protected static function filterArray($array, $filter = FILTER_SANITIZE_SPECIAL_CHARS): array
-    {
-        $filteredArray = array();
-        foreach ($array as $key => $value) {
-            if (is_array($value)) $filteredArray[$key] = self::filterArray($value, $filter);
-            else $filteredArray[$key] = filter_var($value, $filter);
-        }
-        return $filteredArray;
     }
 
     /**
@@ -92,20 +85,6 @@ abstract class Model
     }
 
     /**
-     * @throws Exception
-     */
-    protected static function refreshToken()
-    {
-        $data = self::decodeJWT(self::getToken());
-        if (!self::isTokenExpired($data['payload']['exp'])) return;
-        $user = User::getUser($data['payload']['email'])->getFirstRow();
-        if (!$user) throw new Exception("User not found", 404);
-        unset($user['password']);
-        Application::$app->db->execute("UPDATE users SET expiration = :expiration WHERE email = :email", [":expiration" => self::$expiration, ":email" => $user['email']]);
-    }
-
-
-    /**
      * Récupère les informations de l'utilisateur à partir du jeton d'authentification.
      *
      * @return array|null Les informations de l'utilisateur, ou null si l'utilisateur n'est pas trouvé
@@ -113,12 +92,13 @@ abstract class Model
      */
     protected static function getUserByToken($expiration = true): ?array
     {
-        $data = self::isTokenValid($expiration);
+        $data = self::getDataToken($expiration);
         $user = User::getUser($data['payload']['email'])->getFirstRow();
         if (!$user) throw new Exception("User not found", 404);
         unset($user['password']);
         return $user;
     }
+
 
     /**
      * Encode une chaîne en base64 URL-safe.
