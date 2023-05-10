@@ -65,11 +65,12 @@ class Recipe extends Model
             'instructions' => $data['instructions'],
             'calories' => $data['calories'],
             'created_at' => date("Y-m-d H:i:s"),
-            'image' => $data['image'],
+            'image' => array_map('base64_decode', $data['image']),  // if $data['image'] is an array
             'category' => $data['category'],
             'idUser' => $user['idUser'],
             'food_type' => $data['food_type']
         ];
+
         try {
             Application::$app->db->beginTransaction();
             self::insertRecipe($data, $user);

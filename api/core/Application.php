@@ -9,10 +9,12 @@ class Application
 {
     public static Application $app;
     public static string $ROOT_DIR;
+    public static string $UPLOAD_PATH;
     public Router $router;
     public Request $request;
     public Database $db;
     private array $config;
+
 
     /**
      * Constructeur de l'application.
@@ -27,8 +29,9 @@ class Application
         $this->request = new Request();
         $this->router = new Router($this->request);
         $this->config = $config;
-
+        self::$UPLOAD_PATH = $this->config['UPLOAD_PATH'];
     }
+
     /**
      * Se connecte à la base de données.
      */

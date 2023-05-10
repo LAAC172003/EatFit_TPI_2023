@@ -9,7 +9,11 @@ use Eatfit\Site\Models\User;
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $config = [
-    'API_URL' => "http://eatfittpi2023api/"
+    'API_URL' => "http://eatfittpi2023/",
+    'UPLOAD_PATH' => 'upload/',
+    'MAX_FILE_SIZE' => 3 * 1024 * 1024, //(3mb)
+    'MAX_FILES_SIZE' => 70 * 1024 * 1024, //(70mb)
+    'ALLOWED_IMAGE_EXTENSIONS' => array('png', 'jpg', 'jpeg'),
 ];
 
 $app = new Application(dirname(__DIR__), $config);

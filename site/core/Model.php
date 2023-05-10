@@ -106,7 +106,6 @@ class Model
         $http_header[] = 'Content-Type: application/json';
         if ($addBearer) $http_header[] = 'Authorization: Bearer ' . Application::$app->user->token;
         $curl = curl_init();
-
         curl_setopt_array($curl, array(
             CURLOPT_URL => Application::$API_URL . $data['url'],
             CURLOPT_RETURNTRANSFER => true,
@@ -119,12 +118,12 @@ class Model
             CURLOPT_POSTFIELDS => json_encode($data['data']),
             CURLOPT_HTTPHEADER => $http_header,
         ));
-
-
         $response = curl_exec($curl);
-
+        if (curl_errno($curl)) {
+            $error_msg = curl_error($curl);
+        }
+        var_dump($response);
         curl_close($curl);
-        return json_decode($response);
-
+        return $error_msg ?? json_decode($response, true);
     }
 }

@@ -4,6 +4,7 @@
 ///** @var $categories array */
 
 
+use Eatfit\Site\Core\Application;
 use Eatfit\Site\Core\Form\Form;
 use Eatfit\Site\Models\Recipe;
 
@@ -15,7 +16,7 @@ $this->title = 'Ajouter une recette';
         <h2 class="text-center mb-4">Ajouter une nouvelle recette</h2>
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <?php $form = Form::begin("", "post") ?>
+                <?php $form = Form::begin("", "post", ["enctype" => "multipart/form-data"]) ?>
                 <form class="recipe-form" method="post" action="/add-recipe" enctype="multipart/form-data">
                     <div class="form-group">
                         <?php echo $form->field($model, 'title') ?>
@@ -44,7 +45,14 @@ $this->title = 'Ajouter une recette';
                         ]) ?>
                     </div>
                     <div class="form-group">
-                        <?php echo $form->field($model, "image")->fileField() ?>
+                        <label for="file-input">Image: </label>
+                        <br>
+                        <?php
+                        $acceptTypes = array();
+                        foreach (Application::$ALLOWED_IMAGE_EXTENSIONS as $extension) $acceptTypes[] = 'image/' . $extension;
+                        $acceptValue = implode(',', $acceptTypes);
+                        ?>
+                        <input type="file" multiple name="file-input[]" accept="<?= $acceptValue; ?>">
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-block">Ajouter la recette</button>

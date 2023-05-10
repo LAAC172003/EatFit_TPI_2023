@@ -14,20 +14,20 @@ class Recipe extends Model
     public string $instructions = '';
     public int $calories = 0;
     public $date = '';
-    public int $category = 0;
-    public int $image = 0;
+    public string $category = "";
+    public array $image = [];
     public int $idUser = 0;
+
 
     public function rules(): array
     {
         return [
             'title' => [self::RULE_REQUIRED],
-            'preparation_time' => [self::RULE_REQUIRED, self::RULE_EMAIL],
-            'difficulty' => [self::RULE_REQUIRED, self::RULE_EMAIL],
-            'instructions' => [self::RULE_REQUIRED, [self::RULE_MIN, 'min' => 8]],
-            'calories' => [self::RULE_REQUIRED, [self::RULE_MIN, 'min' => 8]],
-            'category' => [self::RULE_REQUIRED, [self::RULE_MIN, 'min' => 8]],
-            'image' => [self::RULE_REQUIRED, [self::RULE_MIN, 'min' => 8]],
+            'preparation_time' => [self::RULE_REQUIRED],
+            'difficulty' => [self::RULE_REQUIRED],
+            'instructions' => [self::RULE_REQUIRED],
+            'calories' => [self::RULE_REQUIRED],
+            'category' => [self::RULE_REQUIRED]
         ];
     }
 
@@ -39,30 +39,60 @@ class Recipe extends Model
             'difficulty' => "Difficulté: ",
             'instructions' => "Instructions: ",
             'calories' => "Calories: ",
-            'category' => "Catégorie: ",
-            'image' => "Image: ",
+            'category' => "Catégorie: "
         ];
     }
 
+    function validateAndPrepareImages($files): array
+    {
+        $images = $files['file-input'];
+        $numberOfFiles = count($images['name']);
+
+        $imageContents = [];
+
+        for ($i = 0; $i < $numberOfFiles; $i++) {
+            if ($images['error'][$i] !== UPLOAD_ERR_OK) {
+                return ['error' => 'Upload error for file ' . $images['name'][$i]];
+            }
+
+            if (!getimagesize($images['tmp_name'][$i])) {
+                return ['error' => 'File ' . $images['name'][$i] . ' is not an image'];
+            }
+
+            $imageContent = file_get_contents($images['tmp_name'][$i]);
+            $imageContents[] = base64_encode($imageContent);
+        }
+
+        return $imageContents;
+    }
 
     public function save()
     {
-        return self::getJsonResult([
-            'url' => 'recipe',
-            'method' => 'POST',
-            'data' => [
+        $validatedImages = $this->validateAndPrepareImages($_FILES);
+
+        if (isset($validatedImages['error'])) {
+            return false;
+        } else {
+            $data = [
                 'title' => $this->title,
                 'preparation_time' => $this->preparation_time,
                 'difficulty' => $this->difficulty,
                 'instructions' => $this->instructions,
                 'calories' => $this->calories,
+                'image' => $validatedImages,
                 'category' => $this->category,
-                'image' => $this->image
-            ]
-        ], true);
+                'food_type' => "Proteines"
+            ];
+            return self::getJsonResult([
+                'url' => 'recipe',
+                'method' => 'POST',
+                'data' => $data
+            ], true);
+        }
     }
 
-    private function getRecipe($search)
+    private
+    function getRecipe($search)
     {
         return self::getJsonResult([
             'url' => 'recipe',
@@ -73,7 +103,8 @@ class Recipe extends Model
         ], true);
     }
 
-    public function getRecipeByFilter($filter, $search)
+    public
+    function getRecipeByFilter($filter, $search)
     {
         return self::getJsonResult([
             'url' => 'recipe',

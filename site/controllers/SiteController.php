@@ -5,6 +5,7 @@ namespace Eatfit\Site\Controllers;
 
 use Eatfit\Site\Core\Application;
 use Eatfit\Site\Core\Controller;
+use Eatfit\Site\core\Image;
 use Eatfit\Site\Core\Middlewares\AuthMiddleware;
 use Eatfit\Site\Core\Request;
 use Eatfit\Site\Core\Response;
@@ -29,17 +30,22 @@ class SiteController extends Controller
         ]);
     }
 
+
     public function recipe(Request $request)
     {
         if (Application::isGuest()) Application::$app->response->redirect('/login');
         $model = new Recipe();
         if (Application::$app->request->isPost()) {
-            $model->loadData($request->getBody());
-//            if ($model->validate() && $model->save()) {
-//                Application::$app->session->setFlash('success', 'Recipe added');
+            $model->image = $_FILES;
+            $model->idUser = Application::$app->user->idUser;
+            $data = $request->getBody();
+            $data = array_merge($data, [['image' => $model->image], ['idUser' => $model->idUser]]);
+            $model->loadData($data);
+
+            if ($model->validate() && $model->save()) {
+                Application::$app->session->setFlash('success', 'Recipe added');
 //                Application::$app->response->redirect('/recipe');
-//                return;
-//            }
+            }
         }
         return $this->render('add_recipe', [
             'model' => $model

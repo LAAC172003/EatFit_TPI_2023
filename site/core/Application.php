@@ -15,6 +15,7 @@ class Application
 
     public static Application $app;
     public static string $ROOT_DIR;
+    public static array $ALLOWED_IMAGE_EXTENSIONS;
     public static string $API_URL;
     public string $layout = 'main';
     public Router $router;
@@ -29,6 +30,7 @@ class Application
     {
         $this->user = null;
         self::$API_URL = $config['API_URL'];
+        self::$ALLOWED_IMAGE_EXTENSIONS = $config['ALLOWED_IMAGE_EXTENSIONS'];
         self::$ROOT_DIR = $rootDir;
         self::$app = $this;
         $this->request = new Request();

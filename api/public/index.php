@@ -22,7 +22,8 @@ $config = [
         'dsn' => $_ENV['DB_DSN'],
         'user' => $_ENV['DB_USER'],
         'password' => $_ENV['DB_PASSWORD'],
-    ]
+    ],
+    'UPLOAD_PATH' => $_ENV['UPLOAD_PATH'],
 ];
 $app = new Application(dirname(__DIR__), $config);
 
