@@ -100,7 +100,7 @@ class Model
         return $errors[0] ?? '';
     }
 
-    protected static function getJsonResult($data, $addBearer = false)
+    protected static function getJsonResult($data, $addBearer = false, $returnArray = false)
     {
         if (!isset($data['data']) || !isset($data['method']) || !isset($data['url'])) return false;
         $http_header[] = 'Content-Type: application/json';
@@ -119,11 +119,9 @@ class Model
             CURLOPT_HTTPHEADER => $http_header,
         ));
         $response = curl_exec($curl);
-        if (curl_errno($curl)) {
-            $error_msg = curl_error($curl);
-        }
         var_dump($response);
+        if (curl_errno($curl)) $error_msg = curl_error($curl);
         curl_close($curl);
-        return $error_msg ?? json_decode($response, true);
+        return $error_msg ?? json_decode($response, $returnArray);
     }
 }

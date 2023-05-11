@@ -7,6 +7,7 @@ use Eatfit\Api\Core\Application;
 use Eatfit\Api\Core\Db\SqlResult;
 use Eatfit\Api\Core\Model;
 use Exception;
+use http\Exception\BadQueryStringException;
 
 class Recipe extends Model
 {
@@ -28,9 +29,7 @@ class Recipe extends Model
             return $recipe;
         }
         if (!isset($data['search'])) {
-
             if (isset($data['filter'])) {
-//Faire verif pour pas creer de problemes
                 if ($data['filter'][0] == 'category') return self::filter($data['filter'][1])->getValues();
                 if ($data['filter'][0] == 'food_type') return self::filter(null, $data['filter'][1])->getValues();
             }
@@ -58,6 +57,7 @@ class Recipe extends Model
         $user = self::getUserByToken();
         if (!$user) throw new Exception("Unauthorized", 401);
         self::validateRecipeData($data);
+
         $data = [
             'title' => $data['title'],
             'preparation_time' => $data['preparation_time'],
@@ -65,7 +65,7 @@ class Recipe extends Model
             'instructions' => $data['instructions'],
             'calories' => $data['calories'],
             'created_at' => date("Y-m-d H:i:s"),
-            'image' => array_map('base64_decode', $data['image']),  // if $data['image'] is an array
+            'image' => $data['image'],
             'category' => $data['category'],
             'idUser' => $user['idUser'],
             'food_type' => $data['food_type']
@@ -82,7 +82,6 @@ class Recipe extends Model
             Application::$app->db->rollBack();
             throw new Exception("Error creating new recipe: " . $e->getMessage(), 500);
         }
-
         return self::getRecipe($data['title'])->getFirstRow();
     }
 
@@ -136,7 +135,8 @@ class Recipe extends Model
             "INSERT INTO recipe_categories (idRecipe, idCategory) VALUES ((SELECT idRecipe FROM recipes WHERE title = :title), (SELECT idCategory FROM categories WHERE name = :name))",
             [
                 ":title" => $data['title'],
-                ":name" => $data['category']]
+                ":name" => $data['category']
+            ]
         );
     }
 
@@ -164,16 +164,13 @@ class Recipe extends Model
      */
     private static function insertRecipeImages(array $data): void
     {
-        if (is_array($data['image'])) {
-            foreach ($data['image'] as $image) {
-                Application::$app->db->execute(
-                    "SELECT insert_unique_image_name(:path, (SELECT idRecipe FROM recipes WHERE title = :title));",
-                    [":path" => $image, ":title" => $data['title']]);
-            }
-        } else {
+        foreach ($data['image'] as $images) {
+            $image = explode(",", $images);
+            file_put_contents(Application::$UPLOAD_PATH . trim($image[0]), base64_decode(trim($image[1])));
             Application::$app->db->execute(
                 "SELECT insert_unique_image_name(:path, (SELECT idRecipe FROM recipes WHERE title = :title));",
-                [":path" => $data['image'], ":title" => $data['title']]);
+                [":path" => trim($image[0]), ":title" => $data['title']]
+            );
         }
     }
 
@@ -184,7 +181,8 @@ class Recipe extends Model
      * @return string
      * @throws Exception
      */
-    public static function update(array $data): string
+    public
+    static function update(array $data): string
     {
         $data = self::filterArray($data);
         if (!isset($data['wanted_recipe_title'])) throw new Exception("Missing recipe title, -> 'wanted_recipe_title' : 'title'", 400);
@@ -217,7 +215,8 @@ class Recipe extends Model
      * @return string
      * @throws Exception
      */
-    public static function delete(array $data): string
+    public
+    static function delete(array $data): string
     {
         if (self::getRecipe($data['title'])->getFirstRow()['idUser'] != self::getUserByToken()['idUser']) throw new Exception("Unauthorized", 401);
         if (self::getRecipe($data['title'])->isEmpty()) throw new Exception("Recipe not found", 404);
@@ -238,7 +237,8 @@ class Recipe extends Model
      * @return SqlResult
      * @throws Exception
      */
-    private static function getRecipe(string $title): SqlResult
+    private
+    static function getRecipe(string $title): SqlResult
     {
         $query = "SELECT * FROM recipes WHERE title = :title";
         return Application::$app->db->execute($query, [":title" => $title]);
@@ -250,13 +250,13 @@ class Recipe extends Model
      * @return array
      * @throws Exception
      */
-    private
-    static function getAllRecipes(): array
+    private static function getAllRecipes(): array
     {
-        $statement = Application::$app->db->execute("SELECT * FROM recipes");
+        $statement = Application::$app->db->execute("SELECT * FROM recipes_details");
         if ($statement->isEmpty()) throw new Exception("No recipes found", 404);
         return $statement->getValues();
     }
+
 
     /**
      * Search recipes based on the provided filters.
@@ -271,12 +271,13 @@ class Recipe extends Model
         $isDate = $date && $date->format('Y-m-d') === $search;
         $searchForText = "%{$search}%";
         $searchForDate = $isDate ? $search : '';
-        $sql = "SELECT recipes.*, categories.name AS category_name FROM recipes 
-            JOIN recipe_categories ON recipes.idRecipe = recipe_categories.idRecipe 
-            JOIN categories ON recipe_categories.idCategory = categories.idCategory 
-            WHERE recipes.title LIKE :searchText OR categories.name LIKE :searchText OR DATE_FORMAT(recipes.created_at, '%Y-%m-%d') = :searchDate";
+        $sql = "SELECT recipes_details.* FROM recipes_details 
+            WHERE recipes_details.recipe_title LIKE :searchText 
+            OR recipes_details.categories LIKE :searchText 
+            OR DATE_FORMAT(recipes_details.created_at, '%Y-%m-%d') = :searchDate";
         return Application::$app->db->execute($sql, [':searchText' => $searchForText, ':searchDate' => $searchForDate]);
     }
+
 
     /**
      * Filter recipes by category or food type.
@@ -288,34 +289,20 @@ class Recipe extends Model
      */
     public static function filter($category = null, $foodType = null): SqlResult
     {
-        $sql = "SELECT 
-                recipes.*,
-                GROUP_CONCAT(DISTINCT categories.name) AS category_name,
-                GROUP_CONCAT(DISTINCT food_types.name) AS food_type_name
-            FROM 
-                recipes 
-            JOIN 
-                recipe_categories ON recipes.idRecipe = recipe_categories.idRecipe 
-            JOIN 
-                categories ON recipe_categories.idCategory = categories.idCategory 
-            JOIN 
-                recipe_food_types ON recipes.idRecipe = recipe_food_types.idRecipe
-            JOIN 
-                food_types ON recipe_food_types.idFoodType = food_types.idFoodType ";
+        $sql = "SELECT recipes_details.* FROM recipes_details ";
         $where = [];
         $params = [];
         if ($category !== null) {
-            $where[] = 'categories.name = :category';
+            $where[] = 'FIND_IN_SET(:category, recipes_details.categories) > 0';
             $params[':category'] = $category;
         }
         if ($foodType !== null) {
-            $where[] = 'food_types.name = :foodType';
+            $where[] = 'FIND_IN_SET(:foodType, recipes_details.foodtypes_with_percentages) > 0';
             $params[':foodType'] = $foodType;
         }
         if (!empty($where)) {
             $sql .= 'WHERE ' . implode(' AND ', $where) . ' ';
         }
-        $sql .= "GROUP BY recipes.idRecipe ";
         try {
             return Application::$app->db->execute($sql, $params);
         } catch (Exception $e) {
@@ -332,7 +319,8 @@ class Recipe extends Model
      * @return string
      * @throws Exception
      */
-    public static function addToHistory(array $data): string
+    public
+    static function addToHistory(array $data): string
     {
         $user = self::getUserByToken();
         if (!$user) throw new Exception("Unauthorized", 401);
@@ -359,7 +347,8 @@ class Recipe extends Model
      * @return string
      * @throws Exception
      */
-    public static function deleteHistory(array $data): string
+    public
+    static function deleteHistory(array $data): string
     {
         $user = self::getUserByToken();
         if (!$user) throw new Exception("Unauthorized", 401);
@@ -388,21 +377,44 @@ class Recipe extends Model
      */
     private static function getRecipeById(int $idRecipe): ?array
     {
-        $query = "SELECT * FROM recipes WHERE idRecipe = :idRecipe";
+        $query = "SELECT * FROM recipes_details WHERE recipe_id = :idRecipe";
         $statement = Application::$app->db->execute($query, [":idRecipe" => $idRecipe]);
         return $statement->isEmpty() ? null : $statement->getFirstRow();
     }
 
+
     /**
      * @throws Exception
      */
-    public static function addFoodType(array $data)
+    public
+    static function addFoodType(array $data)
     {
         $user = self::getUserByToken();
         if (!$user) throw new Exception("Unauthorized", 401);
         if (!Application::$app->db->execute("SELECT * FROM food_types WHERE name = :name", [":name" => $data['name']])->isEmpty()) throw new Exception("Food type already exists", 400);
         Application::$app->db->execute("INSERT INTO food_types(name) VALUES(:name)", [":name" => $data['name']]);
         return "Food type added successfully";
+    }
+
+    /**
+     * @throws Exception
+     */
+    public
+    static function getCategories(): ?array
+    {
+        $query = "SELECT * FROM categories";
+        $statement = Application::$app->db->execute($query);
+        return $statement->isEmpty() ? throw new Exception("No categories found", 404) : $statement->getValues();
+    }
+
+    /**
+     * @throws Exception
+     */
+    public static function getFoodTypes()
+    {
+        $query = "SELECT * FROM food_types";
+        $statement = Application::$app->db->execute($query);
+        return $statement->isEmpty() ? throw new Exception("No food types found", 404) : $statement->getValues();
     }
 
 

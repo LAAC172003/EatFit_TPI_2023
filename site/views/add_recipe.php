@@ -1,8 +1,5 @@
 <?php
 /** @var $model Recipe */
-///** @var $difficulty array */
-///** @var $categories array */
-
 
 use Eatfit\Site\Core\Application;
 use Eatfit\Site\Core\Form\Form;
@@ -17,46 +14,45 @@ $this->title = 'Ajouter une recette';
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <?php $form = Form::begin("", "post", ["enctype" => "multipart/form-data"]) ?>
-                <form class="recipe-form" method="post" action="/add-recipe" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <?php echo $form->field($model, 'title') ?>
-                    </div>
-                    <div class="form-group">
-                        <?php echo $form->field($model, 'preparation_time')->numberField() ?>
-                    </div>
-                    <div class="form-group">
-                        <?php echo $form->field($model, 'difficulty')->selectField([
-                            'easy' => 'Facile',
-                            'medium' => 'Moyen',
-                            'hard' => 'Difficile'
-                        ]) ?>
-                    </div>
-                    <div class="form-group">
-                        <?php echo $form->field($model, 'instructions')->textarea() ?>
-                    </div>
-                    <div class="form-group">
-                        <?php echo $form->field($model, 'calories')->numberField() ?>
-                    </div>
-                    <div class="form-group">
-                        <?php echo $form->field($model, 'category')->selectField([
-                            'easy' => 'Petit déjeuner',
-                            'medium' => 'Moyen',
-                            'hard' => 'Difficile'
-                        ]) ?>
-                    </div>
-                    <div class="form-group">
-                        <label for="file-input">Image: </label>
-                        <br>
-                        <?php
-                        $acceptTypes = array();
-                        foreach (Application::$ALLOWED_IMAGE_EXTENSIONS as $extension) $acceptTypes[] = 'image/' . $extension;
-                        $acceptValue = implode(',', $acceptTypes);
-                        ?>
-                        <input type="file" multiple name="file-input[]" accept="<?= $acceptValue; ?>">
-                    </div>
+                <div class="form-group">
+                    <?php echo $form->field($model, 'title') ?>
+                </div>
+                <div class="form-group">
+                    <?php echo $form->field($model, 'preparation_time')->numberField() ?>
+                </div>
+                <div class="form-group">
+                    <?php echo $form->field($model, 'difficulty')->selectField([
+                        'easy' => 'Facile',
+                        'medium' => 'Moyen',
+                        'hard' => 'Difficile'
+                    ]) ?>
+                </div>
+                <div class="form-group">
+                    <?php echo $form->field($model, 'instructions')->textarea() ?>
+                </div>
+                <div class="form-group">
+                    <?php echo $form->field($model, 'calories')->numberField() ?>
+                </div>
+                <div class="form-group">
+                    <?php echo $form->field($model, 'category')->selectField([
+                        'Petit déjeuner' => 'Petit déjeuner',
+                        'medium' => 'Moyen',
+                        'hard' => 'Difficile'
+                    ]) ?>
+                </div>
+                <div class="form-group">
+                    <label for="file-input">Image: </label>
+                    <br>
+                    <?php
+                    $acceptTypes = array();
+                    foreach (Application::$ALLOWED_IMAGE_EXTENSIONS as $extension) $acceptTypes[] = 'image/' . $extension;
+                    $acceptValue = implode(',', $acceptTypes);
+                    ?>
+                    <input type="file" multiple name="file-input[]" accept="<?= $acceptValue; ?>">
+                </div>
 
-                    <button type="submit" class="btn btn-primary btn-block">Ajouter la recette</button>
-                    <?php Form::end(); ?>
+                <button type="submit" class="btn btn-primary btn-block">Ajouter la recette</button>
+                <?php Form::end(); ?>
             </div
         </div>
     </div>

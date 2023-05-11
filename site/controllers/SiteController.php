@@ -25,13 +25,14 @@ class SiteController extends Controller
     public function home(): string
     {
         $recipeModel = new Recipe();
+//        var_dump($recipeModel->getRecipeByFilter("category", "Déjeuner"));
         return $this->render('home', [
             'name' => 'Lucas Almeida Costa', 'model' => $recipeModel
         ]);
     }
 
 
-    public function recipe(Request $request)
+    public function recipe(Request $request): string
     {
         if (Application::isGuest()) Application::$app->response->redirect('/login');
         $model = new Recipe();
@@ -43,7 +44,8 @@ class SiteController extends Controller
             $model->loadData($data);
 
             if ($model->validate() && $model->save()) {
-                Application::$app->session->setFlash('success', 'Recipe added');
+                var_dump($model);
+//                Application::$app->session->setFlash('success', 'Recipe added');
 //                Application::$app->response->redirect('/recipe');
             }
         }
@@ -52,10 +54,15 @@ class SiteController extends Controller
         ]);
     }
 
-    public function detail()
+    public function detail(Request $request)
     {
-
-        return $this->render('recipe_details');
+        if (Application::isGuest()) Application::$app->response->redirect('/login');
+        $model = new Recipe();
+        $recipe = $model->getRecipe("idRecipe", $request->getRouteParams()['idRecipe'])->value;
+        $recipe->image_paths = !empty($recipe->image_paths) && str_contains($recipe->image_paths, ',') ? array_map('trim', explode(',', $recipe->image_paths)) : array($recipe->image_paths);
+        $recipe->categories = !empty($recipe->categories) && str_contains($recipe->categories, ',') ? array_map('trim', explode(',', $recipe->categories)) : array($recipe->categories);
+        $recipe->foodtypes_with_percentages = !empty($recipe->foodtypes_with_percentages) && str_contains($recipe->foodtypes_with_percentages, ',') ? array_map('trim', explode(',', $recipe->foodtypes_with_percentages)) : array($recipe->foodtypes_with_percentages);
+        return $this->render('recipe_details', ['recipe' => $recipe]);
     }
 
 

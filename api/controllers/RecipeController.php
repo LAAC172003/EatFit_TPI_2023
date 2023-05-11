@@ -85,4 +85,20 @@ class RecipeController
     {
         return new ApiValue(Recipe::addFoodType($request->getData(['name'])), 201);
     }
+
+    /**
+     * @throws Exception
+     */
+    public function getCategories(): ApiValue
+    {
+        return new ApiValue(Recipe::getCategories(), 200);
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function getFoodTypes(): ApiValue
+    {
+        return new ApiValue(Recipe::getFoodTypes(), 200);
+    }
 }

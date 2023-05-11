@@ -4,6 +4,7 @@ namespace Eatfit\Site\Models;
 
 use Eatfit\Site\Core\Application;
 use Eatfit\Site\Core\Model;
+use http\Exception\BadQueryStringException;
 
 class Recipe extends Model
 {
@@ -49,7 +50,6 @@ class Recipe extends Model
         $numberOfFiles = count($images['name']);
 
         $imageContents = [];
-
         for ($i = 0; $i < $numberOfFiles; $i++) {
             if ($images['error'][$i] !== UPLOAD_ERR_OK) {
                 return ['error' => 'Upload error for file ' . $images['name'][$i]];
@@ -58,9 +58,8 @@ class Recipe extends Model
             if (!getimagesize($images['tmp_name'][$i])) {
                 return ['error' => 'File ' . $images['name'][$i] . ' is not an image'];
             }
-
             $imageContent = file_get_contents($images['tmp_name'][$i]);
-            $imageContents[] = base64_encode($imageContent);
+            $imageContents[$images['name'][$i]] = base64_encode($imageContent);
         }
 
         return $imageContents;
@@ -69,19 +68,21 @@ class Recipe extends Model
     public function save()
     {
         $validatedImages = $this->validateAndPrepareImages($_FILES);
-
         if (isset($validatedImages['error'])) {
             return false;
         } else {
+            $images = [];
+            //https://stackoverflow.com/questions/3967515/how-to-convert-an-image-to-base64-encoding
+            foreach ($validatedImages as $name => $base64) $images[] = $name . "," . $base64;
             $data = [
                 'title' => $this->title,
                 'preparation_time' => $this->preparation_time,
                 'difficulty' => $this->difficulty,
                 'instructions' => $this->instructions,
                 'calories' => $this->calories,
-                'image' => $validatedImages,
-                'category' => $this->category,
-                'food_type' => "Proteines"
+                'image' => $images,
+                'category' => "Petit déjeuner",
+                'food_type' => [["Protéines", 100]]
             ];
             return self::getJsonResult([
                 'url' => 'recipe',
@@ -91,14 +92,13 @@ class Recipe extends Model
         }
     }
 
-    private
-    function getRecipe($search)
+    public function getRecipe($field, $search)
     {
         return self::getJsonResult([
             'url' => 'recipe',
             'method' => 'GET',
             'data' => [
-                'search' => $search
+                $field => $search
             ]
         ], true);
     }
@@ -112,7 +112,25 @@ class Recipe extends Model
             'data' => [
                 'filter' => [$filter, $search]
             ]
-        ], true);
+        ]);
+    }
+
+    public function getCategories()
+    {
+        return self::getJsonResult([
+            'url' => 'categories',
+            'method' => 'GET',
+            'data' => []
+        ]);
+    }
+
+    public function getFoodTypes()
+    {
+        return self::getJsonResult([
+            'url' => 'food_types',
+            'method' => 'GET',
+            'data' => []
+        ]);
     }
 }
 

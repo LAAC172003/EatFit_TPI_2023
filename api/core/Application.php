@@ -21,6 +21,7 @@ class Application
      *
      * @param string $rootDir Le répertoire racine de l'application
      * @param array $config La configuration de l'application
+     * @throws Exception
      */
     public function __construct(string $rootDir, array $config)
     {
@@ -48,6 +49,9 @@ class Application
     public function run(): void
     {
         try {
+            if (!is_dir(self::$UPLOAD_PATH)) {
+                if (!mkdir(self::$UPLOAD_PATH, 0777, true)) throw new Exception(sprintf('Failed to create directory "%s"', self::$UPLOAD_PATH));
+            }
             $this->connectToDatabase();
             echo $this->router->resolve();
         } catch (Exception $e) {

@@ -1,38 +1,44 @@
 <?php
-/** @var $products  array */
+/** @var $model Recipe */
+
+use Eatfit\Site\Models\Recipe;
 
 $j = 0;
-foreach ($products as $key => $value) {
+foreach ($model->getCategories()->value as $category) {
+    var_dump($category);
+    $recipes = $model->getRecipeByFilter("category", $category->name)->value;
+    var_dump($recipes);
     ?>
     <div class="carousel-container">
-        <h1><?= $value["categorie"] ?></h1>
+        <h1><?= $category->name ?></h1>
         <div class="inner-carousel">
             <div class="track" id="track<?= $j ?>">
                 <?php
-                for ($i = 0; $i < 10; $i++) {
+                foreach ($recipes as $recipe) {
                     ?>
                     <div class="card-container">
 
                         <div class="container">
                             <div class="row">
                                 <div class="menu-item">
-                                    <a href="/detail"><img
+                                    <a href="/detail/<?= $recipe->recipe_id ?>"><img
                                             src="https://www.mutuellebleue.fr/app/uploads/sites/2/2020/07/petit-dejeuner-complet.jpg"
-                                            alt="Nom du plat" class="rounded"></a>
-                                    <img src="img/like%20(1).png" alt="Nom du plat" class="rounded" id="rounded">
+                                            alt="<?= $recipe->recipe_id ?>" class="rounded"></a>
+                                    <img src="img/like%20(1).png" alt="<?= $recipe->recipe_title ?>" class="rounded"
+                                         id="rounded">
                                     <div class="ouioui">
                                         <div class="nonnon">
-                                            <p class="bulle"><?= $value["ingredients"][0] ?></p>
-                                            <p class="bulle"><?= $value["ingredients"][1] ?></p>
-                                            <p class="bulle"><?= $value["ingredients"][2] ?></p>
+                                            <p class="bulle"><?= "test" ?></p>
+                                            <p class="bulle"><?= "test" ?></p>
+                                            <p class="bulle"><?= "test" ?></p>
                                         </div>
-                                        <h3 style="text-align: left;"><?= $value["nomPlat"] ?></h3>
-                                        <p style="text-align: left;"><?= $value["description"] ?>
+                                        <h3 style="text-align: left;"><?= $recipe->recipe_title ?></h3>
+                                        <p style="text-align: left;"><?= $recipe->recipe_instructions ?>
                                             <?php
-                                            if (strlen(("phpsdfjshdfjksdfdsjhdsfhgdsfjhfdsjfdsgj")) > 30) {
+                                            if (strlen($recipe->recipe_instructions) > 30) {
                                                 echo "...";
                                             } else {
-                                                echo "phpsdfjshdfjksdfdsjhdsfhgdsfjhfdsjfdsgj";
+                                                echo $recipe->recipe_instructions;
                                             }
                                             ?></p>
 
@@ -48,7 +54,7 @@ foreach ($products as $key => $value) {
                 ?>
 
             </div>
-            <div class="nav">
+            <div class="nav" <?php if (count($recipes) < 5) echo 'style="display: none;"' ?>>
                 <button class="prev" data-index="" id="prev<?= $j ?>" onclick="Prev(<?= $j ?>)"><i
                         class="fas fa-arrow-left fa-2x"></i></button>
                 <button class="next" data-index="0" id="next<?= $j ?>" onclick="Next(<?= $j ?>)"><i
@@ -58,4 +64,4 @@ foreach ($products as $key => $value) {
     </div>
     <?php
     $j++;
-} ?>
+}

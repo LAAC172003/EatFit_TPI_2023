@@ -9,8 +9,8 @@ use Eatfit\Site\Models\User;
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $config = [
-    'API_URL' => "http://eatfittpi2023/",
-    'UPLOAD_PATH' => 'upload/',
+    'API_URL' => "http://eatfittpi2023api/",
+    'UPLOAD_PATH' => 'uploads/',
     'MAX_FILE_SIZE' => 3 * 1024 * 1024, //(3mb)
     'MAX_FILES_SIZE' => 70 * 1024 * 1024, //(70mb)
     'ALLOWED_IMAGE_EXTENSIONS' => array('png', 'jpg', 'jpeg'),
@@ -19,7 +19,7 @@ $config = [
 $app = new Application(dirname(__DIR__), $config);
 
 $app->router->get('/', [SiteController::class, 'home']);
-$app->router->get('/detail', [SiteController::class, 'detail']);
+$app->router->get('/detail/{idRecipe}', [SiteController::class, 'detail']);
 
 
 $app->router->get('/login', [SiteController::class, 'login']);

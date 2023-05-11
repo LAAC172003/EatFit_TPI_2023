@@ -58,4 +58,6 @@ $app->router->put('/rating', [RatingController::class, 'update']);// get User
 $app->router->delete('/rating', [RatingController::class, 'delete']);// get User
 
 $app->router->post('/food_type', [RecipeController::class, 'addFoodType']);// get User
+$app->router->get('/food_types', [RecipeController::class, 'getFoodTypes']);// get User
+$app->router->get('/categories', [RecipeController::class, 'getCategories']);// get User
 $app->run();
