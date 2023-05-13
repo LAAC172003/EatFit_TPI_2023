@@ -1,4 +1,5 @@
 <?php
+/** @var $this \Eatfit\Site\Core\View */
 
 use Eatfit\Site\Core\Application;
 
@@ -8,7 +9,7 @@ use Eatfit\Site\Core\Application;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eatfit</title>
+    <title><?= $this->title ?></title>
 
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet">
@@ -30,21 +31,18 @@ use Eatfit\Site\Core\Application;
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav mr-auto">
-                <li class="nav-item">
-                    <a class="nav-link font-weight-bold" href="catalogue.php">Catalogue</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link font-weight-bold" href="catalogue.php">Catalogue</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link font-weight-bold" href="catalogue.php">Catalogue</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link font-weight-bold" href="catalogue.php">Catalogue</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link font-weight-bold" href="catalogue.php">Catalogue</a>
-                </li>
+                <?php
+                if (!Application::isGuest()) {
+                    ?>
+                    <li class="nav-item">
+                        <a class="nav-link font-weight-bold" href="/recipe">Ajouter une nouvelle recette</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link font-weight-bold" href="/history">Historique des recettes consommées</a>
+                    </li>
+                    <?php
+                }
+                ?>
             </ul>
             <ul class="navbar-nav ml-auto">
                 <?php

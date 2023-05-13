@@ -94,7 +94,7 @@ class Request
     {
         $body = $this->getBody();
         if (!$requireAllFields && $body == null) return [];
-        if (!is_array($body)) throw new Exception("Invalid body", 400);
+        if (!is_array($body)) throw new Exception("Corps de la requête invalide", 400);
         $this->validateData($body, $requiredFields, $requireAllFields);
         return $body;
     }
@@ -110,56 +110,46 @@ class Request
      */
     private function validateData(array $fields, array $requiredFields = null, bool $requireAllFields = true, $parentKey = ''): void
     {
-        if (empty($fields)) throw new Exception("No data in the body", 400);
+        if (empty($fields)) throw new Exception("Pas de données dans le corps de la requête", 400);
         if ($requiredFields !== null) {
-            if (!is_array($requiredFields) || count($requiredFields) == 0) throw new Exception("Invalid required fields", 400);
+            if (!is_array($requiredFields) || count($requiredFields) == 0) throw new Exception("Champs requis invalides", 400);
             $missingFields = [];
             $extraFields = array_diff(array_keys($fields), array_keys($requiredFields));
 
             foreach ($requiredFields as $field => $nestedFields) {
-                // Si le champ est un tableau...
                 if (is_array($nestedFields)) {
-                    // Si le champ existe et est un tableau, valide les champs imbriqués
                     if (array_key_exists($field, $fields) && is_array($fields[$field])) {
                         $this->validateData($fields[$field], $nestedFields, $requireAllFields, $parentKey . $field . '.');
-                        // Supprime le champ de la liste des champs en trop
                         $extraFields = array_diff($extraFields, [$field]);
                     } else if ($requireAllFields) {
-                        // Si tous les champs sont requis et que le champ est manquant, ajoute-le à la liste des champs manquants
                         $missingFields[] = $parentKey . $field;
                     }
                 } else {
-                    // Si le champ n'est pas un tableau et est manquant, ajoute-le à la liste des champs manquants
                     if (!array_key_exists($nestedFields, $fields)) {
                         if ($requireAllFields) $missingFields[] = $parentKey . $nestedFields;
                     } else {
-                        // Si le champ existe, supprime-le de la liste des champs en trop
                         $extraFields = array_diff($extraFields, [$nestedFields]);
                     }
                 }
             }
 
             if (!empty($missingFields)) {
-                // Formate les champs autorisés pour les afficher dans le message d'erreur
                 $allowedFields = array_map(function ($key, $value) {
                     return is_array($value) ? $key : $value;
                 }, array_keys($requiredFields), $requiredFields);
 
-                // Formate les champs manquants pour les afficher dans le message d'erreur
                 $missingFieldsFormatted = array_map(function ($field) {
                     return str_replace(explode('.', $field)[0] . ".", '', $field);
                 }, $missingFields);
-                throw new Exception("Missing fields: " . implode(", ", $missingFieldsFormatted) . ". Allowed fields" . ($parentKey ? " in " . rtrim($parentKey, '.') : "") . " are: " . implode(", ", $allowedFields), 422);
+                throw new Exception("Champs manquants : " . implode(", ", $missingFieldsFormatted) . ". Champs autorisés" . ($parentKey ? " dans " . rtrim($parentKey, '.') : "") . " sont : " . implode(", ", $allowedFields), 422);
             }
 
             if (!empty($extraFields)) {
-                // Formate les champs autorisés pour les afficher dans le message d'erreur
                 $allowedFields = array_map(function ($key, $value) {
                     return is_array($value) ? $key : $value;
                 }, array_keys($requiredFields), $requiredFields);
-                throw new Exception("The fields: " . implode(", ", $extraFields) . " do not exist. Allowed fields" . ($parentKey ? " in " . rtrim($parentKey, '.') : "") . " are: " . implode(", ", $allowedFields), 422);
+                throw new Exception("Les champs : " . implode(", ", $extraFields) . " n'existent pas. Les champs autorisés" . ($parentKey ? " dans " . rtrim($parentKey, '.') : "") . " sont : " . implode(", ", $allowedFields), 422);
             }
         }
     }
-
 }

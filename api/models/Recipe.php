@@ -12,26 +12,28 @@ use http\Exception\BadQueryStringException;
 class Recipe extends Model
 {
     /**
-     * Retrieve a recipe or all recipes based on the given data.
-     * If no specific recipe title is provided in search filters, all recipes are returned.
-     * Otherwise, it returns the specific recipe matching the title.
-     * Throws an exception if no recipe matches the title.
+     * Récupère une recette ou toutes les recettes en fonction des données fournies.
+     * Si aucun titre de recette spécifique n'est fourni dans les filtres de recherche, toutes les recettes sont renvoyées.
+     * Sinon, elle renvoie la recette spécifique correspondant au titre.
+     * Lance une exception si aucune recette ne correspond au titre.
      *
-     * @param array $data
-     * @return array|null
-     * @throws Exception
+     * @param array $data Les données de recherche
+     * @return array|null Les recettes correspondantes
+     * @throws Exception En cas d'erreur ou de recette non trouvée
      */
     public static function read(array $data): ?array
     {
         if (isset($data['idRecipe'])) {
             $recipe = self::getRecipeById($data['idRecipe']);
-            if ($recipe == null) throw new Exception("Recipe not found", 404);
+            if ($recipe == null) throw new Exception("Recette non trouvée", 404);
             return $recipe;
         }
         if (!isset($data['search'])) {
             if (isset($data['filter'])) {
-                if ($data['filter'][0] == 'category') return self::filter($data['filter'][1])->getValues();
-                if ($data['filter'][0] == 'food_type') return self::filter(null, $data['filter'][1])->getValues();
+                foreach ($data['filter'] as $filter => $value) {
+                    if ($filter == 'category') return self::filter($value)->getValues();
+                    if ($filter == 'food_type') return self::filter(null, $value)->getValues();
+                }
             }
             return self::getAllRecipes();
         }
@@ -39,24 +41,25 @@ class Recipe extends Model
         try {
             $recipe = self::search($data['search']);
         } catch (Exception $e) {
-            throw new Exception("Error searching for recipe: " . $e->getMessage(), 500);
+            throw new Exception("Erreur lors de la recherche de recette : " . $e->getMessage(), 500);
         }
-        if ($recipe->isEmpty()) throw new Exception("Recipe not found", 404);
+        if ($recipe->isEmpty()) throw new Exception("Recette non trouvée", 404);
         return $recipe->getValues();
     }
 
     /**
-     * Create a new recipe.
+     * Crée une nouvelle recette.
      *
-     * @param array $data
-     * @return array|Exception
-     * @throws Exception
+     * @param array $data Les données de la recette
+     * @return array|Exception Les informations de la recette créée ou une exception en cas d'erreur
+     * @throws Exception En cas d'erreur ou d'authentification échouée
      */
     public static function create(array $data): array|Exception
     {
         $user = self::getUserByToken();
-        if (!$user) throw new Exception("Unauthorized", 401);
+        if (!$user) throw new Exception("Non autorisé", 401);
         self::validateRecipeData($data);
+
 
         $data = [
             'title' => $data['title'],
@@ -70,7 +73,7 @@ class Recipe extends Model
             'idUser' => $user['idUser'],
             'food_type' => $data['food_type']
         ];
-
+//        var_dump($data['image']);
         try {
             Application::$app->db->beginTransaction();
             self::insertRecipe($data, $user);
@@ -80,35 +83,43 @@ class Recipe extends Model
             Application::$app->db->commit();
         } catch (Exception $e) {
             Application::$app->db->rollBack();
-            throw new Exception("Error creating new recipe: " . $e->getMessage(), 500);
+            throw new Exception("Erreur lors de la création de la recette : " . $e->getMessage(), 500);
         }
         return self::getRecipe($data['title'])->getFirstRow();
     }
 
     /**
-     * @throws Exception
+     * Valide les données de la recette.
+     *
+     * @param array $data Les données de la recette
+     * @throws Exception En cas de données invalides ou en cas d'erreur
      */
     private static function validateRecipeData(array $data): void
     {
         $data = self::filterArray($data);
-        if (!self::getRecipe($data['title'])->isEmpty()) throw new Exception("Recipe already exists", 400);
+        if (!self::getRecipe($data['title'])->isEmpty()) throw new Exception("La recette existe déjà", 400);
         $categories = Application::$app->db->execute("SELECT * FROM categories")->getColumn("name");
         $food_types = Application::$app->db->execute("SELECT * FROM food_types")->getColumn("name");
-        if (!is_numeric($data['preparation_time'])) throw new Exception("Invalid preparation time '" . $data['preparation_time'] . "' , the preparation time must be a number", 400);
-        if ($data['difficulty'] != "easy" && $data['difficulty'] != "medium" && $data['difficulty'] != "hard") throw new Exception("Invalid difficulty '" . $data['difficulty'] . "' , the difficulties allowed are : easy, medium, hard", 400);
-        if (!in_array($data['category'], $categories)) throw new Exception("Invalid category '" . $data['category'] . "' , the categories allowed are : " . implode(", ", $categories), 400);
+        $difficulties = ["facile", "moyen", "difficile"];
+        if (!is_numeric($data['preparation_time'])) throw new Exception("Temps de préparation invalide : '" . $data['preparation_time'] . "'. Le temps de préparation doit être un nombre", 400);
+        if (!in_array($data['difficulty'], $difficulties)) throw new Exception("Difficulté invalide : '" . $data['difficulty'] . "'. Les difficultés autorisées sont : facile, moyen, difficile", 400);
+        if (!in_array($data['category'], $categories)) throw new Exception("Catégorie invalide : '" . $data['category'] . "'. Les catégories autorisées sont : " . implode(", ", $categories), 400);
         if (!is_array($data['food_type'])) $data['food_type'] = [$data['food_type']]; //A revoir
         $percentage = 0;
         foreach ($data['food_type'] as $food_type) {
             $percentage += $food_type[1];
-            if ($food_type[1] < 0 || $food_type[1] > 100) throw new Exception("Invalid percentage '" . $food_type[1] . "' , the percentage must be between 0 and 100", 400);
-            if (!in_array($food_type[0], $food_types)) throw new Exception("Invalid food type '$food_type[0]', the food types allowed are : " . implode(", ", $food_types), 400);
+            if ($food_type[1] < 0 || $food_type[1] > 100) throw new Exception("Pourcentage invalide : '" . $food_type[1] . "'. Le pourcentage doit être compris entre 0 et 100", 400);
+            if (!in_array($food_type[0], $food_types)) throw new Exception("Type d'aliment invalide : '$food_type[0]'. Les types d'aliments autorisés sont : " . implode(", ", $food_types), 400);
         }
-        if ($percentage != 100) throw new Exception("The sum of the percentages must be equal to 100", 400);
+        if ($percentage != 100) throw new Exception("La somme des pourcentages doit être égale à 100", 400);
     }
 
     /**
-     * @throws Exception
+     * Insère une recette dans la base de données.
+     *
+     * @param array $data Les données de la recette
+     * @param array $user L'utilisateur
+     * @throws Exception En cas d'erreur lors de l'insertion de la recette
      */
     private static function insertRecipe(array $data, array $user): void
     {
@@ -127,7 +138,10 @@ class Recipe extends Model
     }
 
     /**
-     * @throws Exception
+     * Insère les catégories de la recette dans la base de données.
+     *
+     * @param array $data Les données de la recette
+     * @throws Exception En cas d'erreur lors de l'insertion des catégories
      */
     private static function insertRecipeCategories(array $data): void
     {
@@ -141,7 +155,10 @@ class Recipe extends Model
     }
 
     /**
-     * @throws Exception
+     * Insère les types d'aliments de la recette dans la base de données.
+     *
+     * @param array $data Les données de la recette
+     * @throws Exception En cas d'erreur lors de l'insertion des types d'aliments
      */
     private static function insertRecipeFoodType(array $data): void
     {
@@ -160,82 +177,101 @@ class Recipe extends Model
     }
 
     /**
-     * @throws Exception
+     * Insère les images de la recette dans la base de données.
+     *
+     * @param array $data Les données de la recette
+     * @throws Exception En cas d'erreur lors de l'insertion des images
      */
     private static function insertRecipeImages(array $data): void
     {
-        foreach ($data['image'] as $images) {
-            $image = explode(",", $images);
-            file_put_contents(Application::$UPLOAD_PATH . trim($image[0]), base64_decode(trim($image[1])));
+        if ($data['image'] == "") {
+            $data['image'] = match ($data['category']) {
+                "Petit déjeuner" => "/default/breakfast.jpg",
+                "Entrée" => "/default/appetizer.jpg",
+                "Collation" => "/default/snack.jpg",
+                "Déjeuner" => "/default/lunch.jpg",
+                "Dîner" => "/default/dinner.jpg",
+                "Dessert" => "/default/dessert.jpg",
+                default => throw new Exception('Catégorie invalide', 400),
+            };
             Application::$app->db->execute(
                 "SELECT insert_unique_image_name(:path, (SELECT idRecipe FROM recipes WHERE title = :title));",
-                [":path" => trim($image[0]), ":title" => $data['title']]
+                [":path" => $data['image'], ":title" => $data['title']]
             );
+        } else {
+            foreach ($data['image'] as $images) {
+                $image = explode(",", $images);
+                file_put_contents(Application::$UPLOAD_PATH . trim($image[0]), base64_decode(trim($image[1])));
+                Application::$app->db->execute(
+                    "SELECT insert_unique_image_name(:path, (SELECT idRecipe FROM recipes WHERE title = :title));",
+                    [":path" => trim($image[0]), ":title" => $data['title']]
+                );
+            }
         }
     }
 
     /**
-     * Update an existing recipe.
+     * Met à jour une recette existante.
      *
-     * @param array $data
-     * @return string
-     * @throws Exception
+     * @param array $data Les données de mise à jour
+     * @return string Message de succès
+     * @throws Exception En cas d'erreur ou d'authentification échouée
      */
     public
     static function update(array $data): string
     {
         $data = self::filterArray($data);
-        if (!isset($data['wanted_recipe_title'])) throw new Exception("Missing recipe title, -> 'wanted_recipe_title' : 'title'", 400);
-        $recipeResult = self::getRecipe($data['wanted_recipe_title']);
-        if ($recipeResult->isEmpty()) throw new Exception("Recipe not found", 404);
-        if ($recipeResult->getFirstRow()['idUser'] != self::getUserByToken()['idUser']) throw new Exception("Unauthorized", 401);
+        if (!isset($data['idRecipe'])) throw new Exception("L'idRecipe n'a pas été renseigné", 400);
+        $recipeResult = self::getRecipeById($data['idRecipe']);
+        if ($recipeResult == null) throw new Exception("Recette non trouvée", 404);
+        if ($recipeResult['creator_id'] != self::getUserByToken()['idUser']) throw new Exception("Non autorisé", 401);
+
         $updates = [];
-        if (isset($data['difficulty'])) {
-            if ($data['difficulty'] != "easy" && $data['difficulty'] != "medium" && $data['difficulty'] != "hard") throw new Exception("Difficulty must be 'easy', 'medium' or 'hard'", 400);
-        }
+        $difficulties = ["facile", "moyen", "difficile"];
+        if (!in_array($data['difficulty'], $difficulties)) throw new Exception("Difficulté invalide : '" . $data['difficulty'] . "'. Les difficultés autorisées sont : facile, moyen, difficile", 400);
         foreach ($data as $key => $value) {
-            if ($key == "wanted_recipe_title") continue;
+            if ($key == "idRecipe") continue;
             if (isset($value) && $value != "") $updates[$key] = $value;
         }
         $sb = "Recette mise à jour avec succès :";
         try {
-            $query = "UPDATE recipes SET " . implode(", ", array_map(fn($key) => "$key = :$key", array_keys($updates))) . " WHERE title = :wanted_recipe_title";
-            Application::$app->db->execute($query, array_merge($updates, [":wanted_recipe_title" => $data['wanted_recipe_title']]));
+            $query = "UPDATE recipes SET " . implode(", ", array_map(fn($key) => "$key = :$key", array_keys($updates))) . " WHERE idRecipe = :idRecipe";
+            Application::$app->db->execute($query, array_merge($updates, [":idRecipe" => $data['idRecipe']]));
             $sb .= implode(", ", array_map(fn($key, $value) => "$key = $value", array_keys($updates), array_values($updates)));
         } catch (Exception $e) {
-            throw new Exception("Error updating recipe", 500);
+            throw new Exception("Erreur lors de la mise à jour de la recette", 500);
         }
         return $sb;
     }
 
     /**
-     * Delete a recipe.
+     * Supprime une recette.
      *
-     * @param array $data
-     * @return string
-     * @throws Exception
+     * @param array $data Les données de la recette à supprimer
+     * @return string Message de succès
+     * @throws Exception En cas d'erreur ou d'authentification échouée
      */
-    public
-    static function delete(array $data): string
+    public static function delete(array $data): string
     {
-        if (self::getRecipe($data['title'])->getFirstRow()['idUser'] != self::getUserByToken()['idUser']) throw new Exception("Unauthorized", 401);
-        if (self::getRecipe($data['title'])->isEmpty()) throw new Exception("Recipe not found", 404);
+        $recipe = self::getRecipeById($data['idRecipe']);
+        if ($recipe == null) throw new Exception("Recette non trouvée", 404);
+        if ($recipe['creator_id'] != self::getUserByToken()['idUser']) throw new Exception("Non autorisé", 401);
         try {
             //Call procedure
-            Application::$app->db->execute("DELETE FROM recipes WHERE title = :title", [":title" => $data['title']]);
+            Application::$app->db->execute("DELETE FROM recipes WHERE idRecipe= :idRecipe", [":idRecipe" => $data['idRecipe']]);
         } catch (Exception $e) {
-            throw new Exception("Error deleting recipe", 500);
+            throw new Exception("Erreur lors de la suppression de la recette", 500);
         }
         // Retournez un message de succès
         return "Recette supprimée avec succès";
     }
 
     /**
-     * Retrieve a recipe by title.
+     * Récupère une recette par son titre.
      *
-     * @param string $title
-     * @return SqlResult
-     * @throws Exception
+     * @param string $title Le titre de la recette
+     * @return SqlResult Les résultats de la requête
+     * @throws Exception En cas d'erreur
      */
     private
     static function getRecipe(string $title): SqlResult
@@ -245,10 +281,10 @@ class Recipe extends Model
     }
 
     /**
-     * Retrieve all recipes.
+     * Récupère toutes les recettes.
      *
-     * @return array
-     * @throws Exception
+     * @return array Les recettes
+     * @throws Exception En cas d'erreur ou si aucune recette n'est trouvée
      */
     private static function getAllRecipes(): array
     {
@@ -259,13 +295,13 @@ class Recipe extends Model
 
 
     /**
-     * Search recipes based on the provided filters.
+     * Recherche des recettes en fonction des filtres fournis.
      *
-     * @param $search
-     * @return SqlResult
-     * @throws Exception
+     * @param string $search La valeur de recherche
+     * @return SqlResult Les résultats de la recherche
+     * @throws Exception En cas d'erreur
      */
-    private static function search($search): SqlResult
+    private static function search(string $search): SqlResult
     {
         $date = DateTime::createFromFormat('Y-m-d', $search);
         $isDate = $date && $date->format('Y-m-d') === $search;
@@ -280,12 +316,12 @@ class Recipe extends Model
 
 
     /**
-     * Filter recipes by category or food type.
      *
-     * @param null $category
-     * @param null $foodType
-     * @return SqlResult
-     * @throws Exception
+     * Filtre les recettes par catégorie ou type d'aliment.
+     * @param null|string $category La catégorie de recettes à filtrer
+     * @param null|string $foodType Le type d'aliment à filtrer
+     * @return SqlResult Les résultats du filtrage
+     * @throws Exception En cas d'erreur
      */
     public static function filter($category = null, $foodType = null): SqlResult
     {
@@ -307,75 +343,19 @@ class Recipe extends Model
             return Application::$app->db->execute($sql, $params);
         } catch (Exception $e) {
             var_dump($e);
-            throw new Exception("Error filtering recipes", 500);
+            throw new Exception("Erreur lors du filtrage des recettes", 500);
         }
     }
 
 
     /**
-     * Add a recipe to the user's history.
+     * Récupère une recette par son ID.
      *
-     * @param array $data
-     * @return string
-     * @throws Exception
+     * @param int $idRecipe L'ID de la recette
+     * @return array|null Les données de la recette ou null si non trouvée
+     * @throws Exception En cas d'erreur
      */
-    public
-    static function addToHistory(array $data): string
-    {
-        $user = self::getUserByToken();
-        if (!$user) throw new Exception("Unauthorized", 401);
-        if (!is_numeric($data['idRecipe'])) throw new Exception("Recipe ID must be numeric", 400);
-        $recipe = self::getRecipeById($data['idRecipe']);
-        if (!$recipe) throw new Exception("Recipe not found", 404);
-        try {
-            Application::$app->db->execute("INSERT INTO consumed_recipes(idUser, idRecipe, consumption_date) VALUES(:idUser, :idRecipe, :consumption_date)", [
-                ":idUser" => $user['idUser'],
-                ":idRecipe" => $data['recipe_id'],
-                ":consumption_date" => date("Y-m-d")
-            ]);
-        } catch (Exception $e) {
-            throw new Exception("Error adding recipe to history", 500);
-        }
-
-        return "Recette ajoutée à l'historique avec succès";
-    }
-
-    /**
-     * Add a recipe to the user's history.
-     *
-     * @param array $data
-     * @return string
-     * @throws Exception
-     */
-    public
-    static function deleteHistory(array $data): string
-    {
-        $user = self::getUserByToken();
-        if (!$user) throw new Exception("Unauthorized", 401);
-        if (!is_numeric($data['idRecipe'])) throw new Exception("Recipe ID must be numeric", 400);
-        if (isset($data['idRecipe'])) {
-            $recipe = self::getRecipeById($data['idRecipe']);
-            if (!$recipe) throw new Exception("Recipe not found", 404);
-            Application::$app->db->execute("DELETE FROM consumed_recipes WHERE idUser = :idUser AND idRecipe = :idRecipe", [
-                ":idUser" => $user['idUser'],
-                ":idRecipe" => $data['idRecipe']
-            ]);
-            return "Recette supprimée de l'historique avec succès";
-        }
-        Application::$app->db->execute("DELETE FROM consumed_recipes WHERE idUser = :idUser", [
-            ":idUser" => $user['idUser']
-        ]);
-        return "Historique supprimé avec succès";
-    }
-
-    /**
-     * Retrieve a recipe by ID.
-     *
-     * @param int $idRecipe
-     * @return array|null
-     * @throws Exception
-     */
-    private static function getRecipeById(int $idRecipe): ?array
+    public static function getRecipeById(int $idRecipe): ?array
     {
         $query = "SELECT * FROM recipes_details WHERE recipe_id = :idRecipe";
         $statement = Application::$app->db->execute($query, [":idRecipe" => $idRecipe]);
@@ -384,38 +364,46 @@ class Recipe extends Model
 
 
     /**
-     * @throws Exception
+     * Ajoute un type d'aliment.
+     *
+     * @param array $data Les données du type d'aliment
+     * @return string Message de succès
+     * @throws Exception En cas d'erreur ou d'authentification échouée
      */
     public
     static function addFoodType(array $data)
     {
         $user = self::getUserByToken();
         if (!$user) throw new Exception("Unauthorized", 401);
-        if (!Application::$app->db->execute("SELECT * FROM food_types WHERE name = :name", [":name" => $data['name']])->isEmpty()) throw new Exception("Food type already exists", 400);
+        if (!Application::$app->db->execute("SELECT * FROM food_types WHERE name = :name", [":name" => $data['name']])->isEmpty()) throw new Exception("Le type d'aliment existe déjà", 400);
         Application::$app->db->execute("INSERT INTO food_types(name) VALUES(:name)", [":name" => $data['name']]);
-        return "Food type added successfully";
+        return "Type d'aliment ajouté avec succès";
     }
 
     /**
-     * @throws Exception
+     * Récupère les catégories de recettes.
+     *
+     * @return array|null Les catégories de recettes ou null si non trouvées
+     * @throws Exception En cas d'erreur
      */
     public
     static function getCategories(): ?array
     {
         $query = "SELECT * FROM categories";
         $statement = Application::$app->db->execute($query);
-        return $statement->isEmpty() ? throw new Exception("No categories found", 404) : $statement->getValues();
+        return $statement->isEmpty() ? throw new Exception("Aucune catégorie trouvée", 404) : $statement->getValues();
     }
 
     /**
-     * @throws Exception
+     * Récupère les types d'aliments.
+     *
+     * @return array|null Les types d'aliments ou null si non trouvés
+     * @throws Exception En cas d'erreur
      */
     public static function getFoodTypes()
     {
         $query = "SELECT * FROM food_types";
         $statement = Application::$app->db->execute($query);
-        return $statement->isEmpty() ? throw new Exception("No food types found", 404) : $statement->getValues();
+        return $statement->isEmpty() ? throw new Exception("Aucun type d'aliment trouvé", 404) : $statement->getValues();
     }
-
-
 }

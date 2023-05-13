@@ -3,10 +3,13 @@
 
 /** @var $model ProfileModel */
 
-use Eatfit\Site\Core\Form\Form;
-use Eatfit\Site\Models\ProfileModel;
+/** @var $this View */
 
+use Eatfit\Site\Core\Form\Form;
+use Eatfit\Site\Core\View;
+use Eatfit\Site\Models\ProfileModel;
 $this->title = 'Profile';
+var_dump($this);
 ?>
 
 <h2 class="text-uppercase text-center text-secondary mb-0">Votre profil</h2>

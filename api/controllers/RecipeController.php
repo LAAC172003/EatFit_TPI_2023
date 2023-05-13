@@ -55,7 +55,7 @@ class RecipeController
      */
     public function update(Request $request): ApiValue
     {
-        return new ApiValue(Recipe::update($request->getData(["wanted_recipe_title", "title", "preparation_time", "difficulty", "instructions", "calories", "image"], false)), 200);
+        return new ApiValue(Recipe::update($request->getData(["idRecipe", "title", "preparation_time", "difficulty", "instructions", "calories", "image"], false)), 200);
     }
 
     /**
@@ -67,16 +67,9 @@ class RecipeController
      */
     public function delete(Request $request): ApiValue
     {
-        return new ApiValue(Recipe::delete($request->getData(["title"])), 200);
+        return new ApiValue(Recipe::delete($request->getData(["idRecipe"])), 200);
     }
 
-    /**
-     * @throws Exception
-     */
-    public function addHistory(Request $request): ApiValue
-    {
-        return new ApiValue(Recipe::addToHistory($request->getData(['idRecipe'])), 200);
-    }
 
     /**
      * @throws Exception

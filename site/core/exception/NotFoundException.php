@@ -4,6 +4,6 @@ namespace Eatfit\Site\Core\Exception;
 
 class NotFoundException extends \Exception
 {
-    protected $message = 'Page not found';
+    protected $message = 'Cette page n\'existe pas';
     protected $code = 404;
 }

@@ -2,9 +2,10 @@
 /** @var $recipe */
 
 use Eatfit\Site\Core\Application;
+use Eatfit\Site\Core\Form\Form;
 use Eatfit\Site\Models\Recipe;
 
-var_dump($recipe);
+$this->title = "Détails de la recette";
 
 
 ?>
@@ -13,28 +14,16 @@ var_dump($recipe);
     <?php
     foreach ($recipe->image_paths as $image) {
         ?>
-        <img src="<?= Application::$API_URL . "uploads/" . $image ?>" alt="Image de la recette"
-             class="img-fluid mb-4" id="recipe-image">
+        <img src="<?= Application::$API_URL . "uploads/" . $image ?>" alt="Image de la recette" class="img-fluid mb-4"
+             id="recipe-image">
         <?php
     }
-
     ?>
     <!--    <img src="https://picsum.photos/1200/600" alt="Image de la recette" class="img-fluid mb-4" id="recipe-image">-->
     <h2 class="recipe-title" id="recipe-title"><?= $recipe->recipe_title ?></h2>
     <p id="recipe-author">Recette numéro : <?= $recipe->recipe_id ?></p>
     <p id="recipe-author">Créé par : <?= $recipe->creator_username ?></p>
-    <p> Catégories : </p>
-    <ul>
-        <?php
-        foreach ($recipe->categories as $category) {
-            ?>
-            <li><?= $category ?></li>
-            <?php
-        }
-        ?>
-    </ul>
-
-
+    <p> Catégories : <?= implode(",", $recipe->categories) ?></p>
     <p id="recipe-difficulty">Difficulté : <?= $recipe->difficulty ?></p>
     <p id="recipe-calories">Calories : <?= $recipe->calories ?></p>
     <div class="row">
@@ -58,6 +47,23 @@ var_dump($recipe);
     <center>
         <canvas id="myChart" width="400" height="400"></canvas>
     </center>
+    <div class="consume-recipe-button-container">
+        <a href="/addToHistory/<?= $recipe->recipe_id ?>">
+            <button name="history" class="consume-recipe-button">Consommer cette recette</button>
+        </a>
+        <?php
+        if (Application::$app->user->idUser == $recipe->creator_id) {
+            ?>
+            <a href="/recipe/edit/<?= $recipe->recipe_id ?>">
+                <button class="consume-recipe-button">Modifier</button>
+            </a>
+            <a href="/recipe/delete/<?= $recipe->recipe_id ?>">
+                <button class="consume-recipe-button">Supprimer</button>
+            </a>
+            <?php
+        }
+        ?>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         function generateRandomColorAround(rgb = [146, 76, 22]) {

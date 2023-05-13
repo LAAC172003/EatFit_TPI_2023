@@ -27,7 +27,7 @@ class Database
             self::$pdo = new PDO($config['dsn'], $config['user'], $config['password']);
             self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (PDOException $e) {
-            throw new PDOException("Database connection failed: " . $e->getMessage(), 400);
+            throw new PDOException("La connexion à la base de données a échoué", 400);
         }
     }
 

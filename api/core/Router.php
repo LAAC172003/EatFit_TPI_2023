@@ -124,8 +124,8 @@ class Router
                     $routes[] = $k;
                 }
             }
-            if (in_array($url, $routes)) throw new Exception("Method $method not allowed for route: '$url'", 405);
-            if ($callback === false) throw new Exception("No route found for route: $url", 404);
+            if (in_array($url, $routes)) throw new Exception("La méthode $method n'est pas autorisée pour la route : '$url'", 405);
+            if ($callback === false) throw new Exception("Aucune route trouvée pour la route : $url", 404);
         }
         if (is_array($callback)) $callback = [new $callback[0], $callback[1]];
         return call_user_func($callback, $this->request);

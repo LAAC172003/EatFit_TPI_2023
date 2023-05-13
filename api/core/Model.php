@@ -2,25 +2,33 @@
 
 namespace Eatfit\Api\Core;
 
-
 use Eatfit\Api\Models\User;
 use Exception;
 
 abstract class Model
 {
+    /**
+     * Filtre un tableau en appliquant un filtre aux valeurs.
+     *
+     * @param array $array Le tableau à filtrer
+     * @param int $filter Le filtre à appliquer aux valeurs (par défaut FILTER_SANITIZE_SPECIAL_CHARS)
+     * @return array Le tableau filtré
+     */
     protected static function filterArray($array, $filter = FILTER_SANITIZE_SPECIAL_CHARS): array
     {
-
         $filteredArray = array();
         foreach ($array as $key => $value) {
-            if (is_array($value)) $filteredArray[$key] = self::filterArray($value, $filter);
-            else $filteredArray[$key] = filter_var($value, $filter);
+            if (is_array($value)) {
+                $filteredArray[$key] = self::filterArray($value, $filter);
+            } else {
+                $filteredArray[$key] = filter_var($value, $filter);
+            }
         }
         return $filteredArray;
     }
 
     /**
-     * Récupère le jeton (token) d'authentification à partir des en-têtes de la requête.
+     * Récupère le jeton d'authentification à partir des en-têtes de la requête.
      *
      * @return string Le jeton d'authentification
      * @throws Exception Si le jeton est invalide ou manquant
@@ -28,9 +36,12 @@ abstract class Model
     private static function getToken(): string
     {
         $headers = getallheaders();
-        if (!isset($headers['Authorization'])) throw new Exception("Token expired/invalid", 498);
+        if (!isset($headers['Authorization'])) {
+            throw new Exception("Jeton expiré ou invalide", 498);
+        }
         return explode(" ", $headers['Authorization'])[1];
     }
+
 
     /**
      * Vérifie si le jeton d'authentification est valide.
@@ -42,29 +53,35 @@ abstract class Model
     protected static function getDataToken(bool $expiration = true): array
     {
         $data = self::decodeJWT(self::getToken());
-        if (!User::getUser($data['payload']['email'])) throw new Exception("User not found", 404);
+        if (!User::getUser($data['payload']['email'])) {
+            throw new Exception("Utilisateur introuvable", 404);
+        }
         if (self::isTokenExpired($data['payload']['exp'])) {
             Application::$app->db->execute("UPDATE users SET token = NULL, expiration = NULL WHERE email = :email", [":email" => $data['payload']['email']]);
             if ($expiration) {
-                throw new Exception("Token expired/invalid", 498);
+                throw new Exception("Jeton expiré ou invalide", 498);
             }
         }
         return $data;
     }
 
-
     /**
+     * Vérifie si le jeton est expiré.
+     *
+     * @param int $expiration L'horodatage de l'expiration du jeton
+     * @return bool True si le jeton est expiré, sinon False
      * @throws Exception
      */
     protected static function isTokenExpired($expiration): bool
     {
-        return $expiration < time() || $expiration === 'expired';
+        return $expiration < time() || $expiration === 'expiré';
     }
 
     /**
      * Génère un JSON Web Token (JWT) à partir des données fournies.
      *
      * @param array $data Les données à inclure dans le JWT
+     * @param int|null $expiration Expiration du JWT (par défaut 2 heures après la génération)
      * @return string Le JWT généré
      */
     protected static function generateJWT(array $data, $expiration = null): string
@@ -87,18 +104,20 @@ abstract class Model
     /**
      * Récupère les informations de l'utilisateur à partir du jeton d'authentification.
      *
+     * @param bool $expiration Vérifie l'expiration du jeton si true
      * @return array|null Les informations de l'utilisateur, ou null si l'utilisateur n'est pas trouvé
      * @throws Exception Si le jeton est invalide
      */
-    protected static function getUserByToken($expiration = true): ?array
+    protected static function getUserByToken(bool $expiration = true): ?array
     {
         $data = self::getDataToken($expiration);
         $user = User::getUser($data['payload']['email'])->getFirstRow();
-        if (!$user) throw new Exception("User not found", 404);
+        if (!$user) {
+            throw new Exception("Utilisateur introuvable", 404);
+        }
         unset($user['password']);
         return $user;
     }
-
 
     /**
      * Encode une chaîne en base64 URL-safe.
@@ -121,7 +140,9 @@ abstract class Model
     private static function decodeJWT(string $jwt): array
     {
         $parts = explode('.', $jwt);
-        if (count($parts) !== 3) throw new Exception('Invalid JWT format', 498);
+        if (count($parts) !== 3) {
+            throw new Exception('Format JWT invalide', 498);
+        }
         $headers = json_decode(self::urlDecode($parts[0]), true);
         $payload = json_decode(self::urlDecode($parts[1]), true);
         $signature = self::urlDecode($parts[2]);

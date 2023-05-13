@@ -2,9 +2,7 @@
 
 namespace Eatfit\Site\Models;
 
-use Eatfit\Site\Core\Application;
 use Eatfit\Site\Core\Model;
-use http\Exception\BadQueryStringException;
 
 class Recipe extends Model
 {
@@ -17,6 +15,7 @@ class Recipe extends Model
     public $date = '';
     public string $category = "";
     public array $image = [];
+    public array $foodType = [];
     public int $idUser = 0;
 
 
@@ -28,7 +27,8 @@ class Recipe extends Model
             'difficulty' => [self::RULE_REQUIRED],
             'instructions' => [self::RULE_REQUIRED],
             'calories' => [self::RULE_REQUIRED],
-            'category' => [self::RULE_REQUIRED]
+            'category' => [self::RULE_REQUIRED],
+            'foodType' => [self::RULE_REQUIRED]
         ];
     }
 
@@ -40,7 +40,8 @@ class Recipe extends Model
             'difficulty' => "Difficulté: ",
             'instructions' => "Instructions: ",
             'calories' => "Calories: ",
-            'category' => "Catégorie: "
+            'category' => "Catégorie: ",
+            'foodType' => "Type de nourriture: "
         ];
     }
 
@@ -48,16 +49,11 @@ class Recipe extends Model
     {
         $images = $files['file-input'];
         $numberOfFiles = count($images['name']);
-
         $imageContents = [];
+        if ($images['error'][0] == 4) return [];
         for ($i = 0; $i < $numberOfFiles; $i++) {
-            if ($images['error'][$i] !== UPLOAD_ERR_OK) {
-                return ['error' => 'Upload error for file ' . $images['name'][$i]];
-            }
-
-            if (!getimagesize($images['tmp_name'][$i])) {
-                return ['error' => 'File ' . $images['name'][$i] . ' is not an image'];
-            }
+            if ($images['error'][$i] !== UPLOAD_ERR_OK) return ['error' => 'Upload error for file ' . $images['name'][$i]];
+            if (!getimagesize($images['tmp_name'][$i])) return ['error' => 'File ' . $images['name'][$i] . ' is not an image'];
             $imageContent = file_get_contents($images['tmp_name'][$i]);
             $imageContents[$images['name'][$i]] = base64_encode($imageContent);
         }
@@ -65,7 +61,7 @@ class Recipe extends Model
         return $imageContents;
     }
 
-    public function save()
+    public function create()
     {
         $validatedImages = $this->validateAndPrepareImages($_FILES);
         if (isset($validatedImages['error'])) {
@@ -74,6 +70,7 @@ class Recipe extends Model
             $images = [];
             //https://stackoverflow.com/questions/3967515/how-to-convert-an-image-to-base64-encoding
             foreach ($validatedImages as $name => $base64) $images[] = $name . "," . $base64;
+            if ($validatedImages == []) $images = "";
             $data = [
                 'title' => $this->title,
                 'preparation_time' => $this->preparation_time,
@@ -81,9 +78,11 @@ class Recipe extends Model
                 'instructions' => $this->instructions,
                 'calories' => $this->calories,
                 'image' => $images,
-                'category' => "Petit déjeuner",
-                'food_type' => [["Protéines", 100]]
+                'category' => $this->category,
+                'food_type' => $this->foodType
             ];
+//            unset($data['image']);
+//            var_dump(json_encode($data));
             return self::getJsonResult([
                 'url' => 'recipe',
                 'method' => 'POST',
@@ -92,7 +91,19 @@ class Recipe extends Model
         }
     }
 
-    public function getRecipe($field, $search)
+    public function delete()
+    {
+        return self::getJsonResult([
+            'url' => 'recipe',
+            'method' => 'DELETE',
+            'data' => [
+                'idRecipe' => $this->idRecipe
+            ]
+        ], true);
+    }
+
+
+    public function getRecipe($field, $search, $addBearer = true)
     {
         return self::getJsonResult([
             'url' => 'recipe',
@@ -100,17 +111,18 @@ class Recipe extends Model
             'data' => [
                 $field => $search
             ]
-        ], true);
+        ], $addBearer);
     }
 
-    public
-    function getRecipeByFilter($filter, $search)
+    public function getRecipeByFilter($filter, $search)
     {
         return self::getJsonResult([
             'url' => 'recipe',
             'method' => 'GET',
             'data' => [
-                'filter' => [$filter, $search]
+                'filter' => [
+                    $filter => $search
+                ]
             ]
         ]);
     }

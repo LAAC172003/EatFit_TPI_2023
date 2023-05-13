@@ -125,7 +125,6 @@
                                         <a href="login.php"><img
                                                 src="https://www.mutuellebleue.fr/app/uploads/sites/2/2020/07/petit-dejeuner-complet.jpg"
                                                 alt="Nom du plat" class="rounded"></a>
-                                        <img src="img/like%20(1).png" alt="Nom du plat" class="rounded" id="rounded">
                                         <div class="ouioui">
                                             <div class="nonnon">
                                                 <p class="bulle"><?= $value["ingredients"][0] ?></p>

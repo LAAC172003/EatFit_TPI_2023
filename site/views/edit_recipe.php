@@ -5,12 +5,12 @@ use Eatfit\Site\Core\Application;
 use Eatfit\Site\Core\Form\Form;
 use Eatfit\Site\Models\Recipe;
 
-$this->title = 'Ajouter une recette';
+$this->title = 'Modifier une recette';
 ?>
 
 <main>
     <div class="container py-5">
-        <h2 class="text-center mb-4">Ajouter une nouvelle recette</h2>
+        <h2 class="text-center mb-4">Modifier la recette</h2>
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <?php $form = Form::begin("", "post", ["enctype" => "multipart/form-data"]) ?>
@@ -52,17 +52,13 @@ $this->title = 'Ajouter une recette';
                     <input type="file" multiple name="file-input[]" accept="<?= $acceptValue; ?>">
                 </div>
 
-
                 <button type="button" onclick="addFoodTypeField()">Ajouter un type de nourriture</button>
                 <button type="button" onclick="removeFoodTypeField()">Supprimer le dernier type de nourriture</button>
 
-                <button type="submit" class="btn btn-primary btn-block">Ajouter la recette</button>
-
+                <button type="submit" class="btn btn-primary btn-block">Mettre à jour la recette</button>
 
                 <?php Form::end(); ?>
-                <!-- Ajouté après la balise de script du graphique -->
-
-            </div
+            </div>
         </div>
     </div>
 </main>
