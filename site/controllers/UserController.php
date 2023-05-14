@@ -16,58 +16,49 @@ class UserController extends Controller
     public function __construct()
     {
         $this->registerMiddleware(new AuthMiddleware(['profile']));
-
     }
 
     /**
      * @throws Exception
      */
-    public function profile(Request $request)
+    public function profile(Request $request): string
     {
         $profileModel = new ProfileModel();
         if (isset($request->getRouteParams()['method'])) {
             if ($request->getRouteParams()['method'] == 'update') {
-                $profileModel->loadData($request->getBody());
-                try {
-                    $apiResponse = $profileModel->update();
-                    if ($apiResponse->message == "OK" && $apiResponse->code == 200) {
-                        Application::$app->session->setFlash('success', 'Le profil a bien été mis à jour');
-                        Application::$app->session->set("user", $apiResponse->value->token);
-                    } else {
-                        Application::$app->session->setFlash('error', $apiResponse->message);
-                    }
-                    Application::$app->response->statusCode($apiResponse->code);
-                    Application::$app->response->redirect('/profile');
 
-                } catch
-                (Exception $e) {
-                    Application::$app->session->setFlash('error', $e->getMessage());
-                }
-//            }
+                $profileModel->loadData($request->getBody());
+                $apiResponse = $profileModel->update();
+                if ($apiResponse->message == "OK" && $apiResponse->code == 200) {
+                    Application::$app->session->setFlash('success', 'Le profil a bien été mis à jour');
+                    Application::$app->session->set("user", $apiResponse->value->token);
+                } else Application::$app->session->setFlash('error', $apiResponse->message);
+                Application::$app->response->statusCode($apiResponse->code);
+                Application::$app->response->redirect('/profile');
             }
             if ($request->getRouteParams()['method'] == "delete") {
-                Application::$app->logout();
-                Application::$app->session->setFlash('success', 'Votre compte a bien été supprimé');
+                $apiResponse = $profileModel->delete();
+                Application::$app->session->setFlash('success', $apiResponse->value);
+                Application::$app->response->statusCode($apiResponse->code);
                 Application::$app->response->redirect('/');
+                Application::$app->logout();
             }
         }
-
-        // Si la requête est de type GET ou si la validation a échoué, afficher le formulaire.
         return $this->render('profile', ['model' => $profileModel, 'user' => Application::$app->user]);
     }
 
-    public function login(Request $request)
+    public function login(Request $request): string
     {
         if (!Application::isGuest()) Application::$app->response->redirect('/');
         $loginForm = new LoginForm();
-
         if ($request->getMethod() === 'post') {
             $loginForm->loadData($request->getBody());
-
             if ($loginForm->validate() && $loginForm->login()) {
-                Application::$app->response->redirect('/');
+                Application::$app->session->setFlash('success', 'Vous êtes maintenant connecté');
             }
+            Application::$app->response->redirect('/');
         }
+
         return $this->render('login', [
             'model' => $loginForm
         ]);
@@ -79,11 +70,21 @@ class UserController extends Controller
         $registerModel = new User();
         if ($request->getMethod() === 'post') {
             $registerModel->loadData($request->getBody());
-            $result = $registerModel->save();
-            if ($registerModel->validate() && $result) {
-                Application::$app->session->setFlash('success', $result->message);
-                Application::$app->response->redirect('/');
-                Application::$app->login($result);
+            $apiResponse = $registerModel->save();
+            if ($registerModel->validate()) {
+                if (!$apiResponse) {
+                    Application::$app->session->setFlash('error', 'Une erreur est survenue');
+                    Application::$app->response->redirect('/register');
+                }
+                if ($apiResponse->code == 201 && $apiResponse->value != null) {
+                    Application::$app->session->setFlash('success', $apiResponse->message);
+                    Application::$app->login($apiResponse);
+                    Application::$app->response->redirect('/');
+                } else {
+                    Application::$app->session->setFlash('error', $apiResponse->message);
+                    Application::$app->response->statusCode($apiResponse->code);
+                    Application::$app->response->redirect('/register');
+                }
             }
         }
         return $this->render('register', [
@@ -91,7 +92,7 @@ class UserController extends Controller
         ]);
     }
 
-    public function logout()
+    public function logout(): void
     {
         Application::$app->logout();
         Application::$app->response->redirect('/');

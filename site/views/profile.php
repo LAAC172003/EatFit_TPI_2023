@@ -11,32 +11,30 @@ use Eatfit\Site\Models\ProfileModel;
 $this->title = 'Profile';
 var_dump($this);
 ?>
-
-<h2 class="text-uppercase text-center text-secondary mb-0">Votre profil</h2>
-<hr class="star-dark mb-5">
+<h2 class="text-uppercase text-center text-secondary mb-0 ">Votre profil</h2>
+<hr class="star-dark mb-5 border-dark">
 <div class="ms-0 me-0 row">
     <div class="col-lg-8 mx-auto">
         <?php $form = Form::begin('/profile/update', 'post', ['id' => 'updateProfileForm']) ?>
         <div class="control-group mb-3 row">
-            <label class="form-label col" style="margin: auto;color: #868e96; font-size: 1.5em;">Email
-                : <?= $user->email ?></label>
-            <button class="btn btn-primary col" type="button" onclick="edit('email')">Modifier</button>
+            <label class="form-label col label-dark" style="margin: auto;">Email : <?= $user->email ?></label>
+            <button class="consume-recipe-button" type="button" onclick="edit('email')">Modifier</button>
         </div>
         <div class="control-group row" id="email"></div>
         <div class="control-group mb-3 row">
-            <label class="form-label col" style="margin: auto;color: #868e96; font-size: 1.5em;">Username
+            <label class="form-label col label-dark" style="margin: auto;">Username
                 : <?= $user->username ?></label>
-            <button class="btn btn-primary col" type="button" onclick="edit('username')">Modifier</button>
+            <button class="consume-recipe-button" type="button" onclick="edit('username')">Modifier</button>
         </div>
         <div class="control-group row" id="username"></div>
         <div class="control-group mb-3 row">
-            <label class="form-label col" style="margin: auto;color: #868e96; font-size: 1.5em;">Mot de
+            <label class="form-label col label-dark" style="margin: auto;">Mot de
                 passe : </label>
-            <button class="btn btn-primary col" type="button" onclick="edit('password')">Modifier</button>
+            <button class="consume-recipe-button" type="button" onclick="edit('password')">Modifier</button>
         </div>
         <div class="control-group row" id="password"></div>
         <div class="control-group mt-3 row">
-            <button class="btn btn-primary btn-xl" id="sendMessageButton" type="submit">Valider</button>
+            <button class="consume-recipe-button" id="sendMessageButton" type="submit">Valider</button>
         </div>
         <?php Form::end() ?>
 
@@ -53,7 +51,7 @@ var_dump($this);
         if (id === "password") {
             if (div.innerHTML === "") {
                 div.innerHTML += '<input class="form-control mt-2" type="password" name="password" placeholder="Nouveau mot de passe">';
-                div.innerHTML += '<input class="form-control mt-2" type="password" name="passwordConfirm" placeholder="Confirmer le mot de passe">';
+                div.innerHTML += '<input class="form-control mt-2" type="password" name="confirm_password" placeholder="Confirmer le mot de passe">';
                 div.innerHTML += '<div class="invalid-feedback"></div>';
             } else div.innerHTML = "";
         } else if (id === "username") {

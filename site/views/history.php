@@ -29,7 +29,6 @@ $this->title = 'Historique';
         if ($history == null) {
             echo "<tr><td colspan='5'>Aucune recette consommée</td></tr>";
         } else
-            //var_dump($model->getHistory()->value
             foreach ($history as $item): ?>
                 <tr>
                     <td data-column="Identifiant de la recette"><?php echo $item->idRecipe; ?></td>

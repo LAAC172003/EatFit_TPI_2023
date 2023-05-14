@@ -1,13 +1,15 @@
 <?php
 /** @var $recipe */
 
+/** @var $ratings Rating */
+
 use Eatfit\Site\Core\Application;
 use Eatfit\Site\Core\Form\Form;
+use Eatfit\Site\Models\Rating;
 use Eatfit\Site\Models\Recipe;
 
 $this->title = "Détails de la recette";
-
-
+$comments = $ratings->getRatingByIdRecipe()->value;
 ?>
 
 <div class="recipe-detail">
@@ -63,6 +65,64 @@ $this->title = "Détails de la recette";
             <?php
         }
         ?>
+    </div>
+    <div class="mt-5">
+        <h3 class="mb-4 ">Commentaires</h3>
+        <?php if (!$comments) : ?>
+            <div class="alert background-color-dark font-color-light" role="alert">
+                Aucun commentaire pour cette recette pour le moment. Soyez le premier à commenter !
+            </div>
+        <?php else: ?>
+            <?php $form = Form::begin("", "post") ?>
+            <?php foreach ($comments as $comment): ?>
+                <div class="card mb-3 border-dark">
+                    <div class="card-header background-color-dark">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong class="font-color-highlight"><?= $comment->username ?></strong>
+                            </div>
+                            <div class="col text-end">
+                                <span class="badge bg-primary-custom"><?= $comment->score ?> / 5</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body background-color-light">
+                        <p class="card-text font-color-main"><?= htmlspecialchars($comment->comment) ?></p>
+                        <?php
+                        if (Application::$app->user->idUser == $comment->idUser) {
+                            ?>
+                            <div class="d-flex justify-content-end">
+                                <a href="/rating/update/<?= $comment->idRating ?>"
+                                   class="btn btn-primary-custom btn-sm mr-2">
+                                    Modifier
+                                </a>
+                                <a href="/rating/delete/<?= $comment->idRating ?>"
+                                   class="btn btn-danger-custom btn-sm">
+                                    Supprimer
+                                </a>
+                            </div>
+                            <?php
+                        }
+                        ?>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+            <?php Form::end() ?>
+        <?php endif; ?>
+    </div>
+
+
+    <div class="mt-4">
+        <h3>Ajouter un commentaire</h3>
+        <?php $form = Form::begin("", "post") ?>
+        <div class="form-group">
+            <?= $form->field($ratings, 'score')->numberField(); ?>
+        </div>
+        <div class="form-group">
+            <?= $form->field($ratings, 'comment')->textarea(); ?>
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Envoyer</button>
+        <?php Form::end() ?>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>

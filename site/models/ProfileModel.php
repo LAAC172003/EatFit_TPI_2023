@@ -8,10 +8,11 @@ use http\Exception\BadQueryStringException;
 
 class ProfileModel extends Model
 {
+    public int $idUser = 0;
     public ?string $username = null;
     public ?string $email = null;
     public ?string $password = null;
-    public ?string $passwordConfirm = null;
+    public ?string $confirm_password = null;
 
     public function rules()
     {
@@ -19,7 +20,7 @@ class ProfileModel extends Model
             'username' => [[self::RULE_REQUIRED]],
             'email' => [[self::RULE_EMAIL], [self::RULE_REQUIRED]],
             'password' => [[self::RULE_MIN, 'min' => 8]],
-            'passwordConfirm' => [[self::RULE_MATCH, 'match' => 'password']]
+            'confirm_password' => [self::RULE_REQUIRED, [self::RULE_MATCH, 'match' => 'password']]
         ];
     }
 
@@ -29,13 +30,13 @@ class ProfileModel extends Model
             'username' => 'Name:',
             'email' => 'Email:',
             'password' => 'Password:',
-            'confirmPassword' => 'Confirm Password:',
+            'confirm_password' => 'Confirm Password:',
         ];
     }
 
     public function attributes()
     {
-        return ['username', 'email', 'password', 'passwordConfirm'];
+        return ['username', 'email', 'password', 'confirm_password'];
     }
 
     /**
@@ -45,37 +46,22 @@ class ProfileModel extends Model
     {
         $updates = [];
         foreach ($this->attributes() as $attribute) {
-            if ($this->$attribute === null || empty($this->$attribute)) {
-                continue;
-            }
+            if ($this->$attribute == null || empty($this->$attribute)) continue;
             $updates[$attribute] = $this->$attribute;
         }
-        $curl = curl_init();
+        return self::getJsonResult([
+            'url' => 'user',
+            'method' => 'PUT',
+            'data' => $updates
+        ], true);
+    }
 
-        $postData = json_encode($updates);
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => 'http://eatfittpi2023api/user',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'PUT',
-            CURLOPT_POSTFIELDS => $postData,
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . Application::$app->user->token
-            ),
-        ));
-        $response = curl_exec($curl);
-        $err = curl_error($curl);
-        curl_close($curl);
-        if ($err) {
-            // Vous pourriez vouloir gérer les erreurs différemment...
-            throw new \Exception("cURL Error #:" . $err);
-        } else {
-            return json_decode($response);
-        }
+    public function delete()
+    {
+        return self::getJsonResult([
+            'url' => 'user',
+            'method' => 'DELETE',
+            'data' => []
+        ], true);
     }
 }

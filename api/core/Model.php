@@ -53,9 +53,7 @@ abstract class Model
     protected static function getDataToken(bool $expiration = true): array
     {
         $data = self::decodeJWT(self::getToken());
-        if (!User::getUser($data['payload']['email'])) {
-            throw new Exception("Utilisateur introuvable", 404);
-        }
+        if (!User::getUser($data['payload']['email'], $data['payload']['username'])) throw new Exception("Utilisateur introuvable", 404);
         if (self::isTokenExpired($data['payload']['exp'])) {
             Application::$app->db->execute("UPDATE users SET token = NULL, expiration = NULL WHERE email = :email", [":email" => $data['payload']['email']]);
             if ($expiration) {
@@ -110,13 +108,17 @@ abstract class Model
      */
     protected static function getUserByToken(bool $expiration = true): ?array
     {
-        $data = self::getDataToken($expiration);
-        $user = User::getUser($data['payload']['email'])->getFirstRow();
-        if (!$user) {
-            throw new Exception("Utilisateur introuvable", 404);
+        $data = self::decodeJWT(self::getToken());
+        if (self::isTokenExpired($data['payload']['exp'])) {
+            Application::$app->db->execute("UPDATE users SET token = NULL, expiration = NULL WHERE email = :email", [":email" => $data['payload']['email']]);
+            if ($expiration) {
+                throw new Exception("Jeton expiré ou invalide", 498);
+            }
         }
-        unset($user['password']);
-        return $user;
+        $user = User::getUser($data['payload']['email'], $data['payload']['username']);
+        if ($user->isEmpty()) throw new Exception("Utilisateur introuvable", 404);
+        unset($user->getFirstRow()['password']);
+        return $user->getFirstRow();
     }
 
     /**

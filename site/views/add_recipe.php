@@ -3,6 +3,7 @@
 
 use Eatfit\Site\Core\Application;
 use Eatfit\Site\Core\Form\Form;
+use Eatfit\Site\Models\FoodType;
 use Eatfit\Site\Models\Recipe;
 
 $this->title = 'Ajouter une recette';
@@ -76,7 +77,7 @@ $this->title = 'Ajouter une recette';
                 <label for="foodtype">Type de nourriture :</label>
                 <select name="foodtype[]" class="form-control">
                     <?php
-        foreach ($model->getFoodTypes()->value as $foodType) {
+        foreach (FoodType::getFoodTypes()->value as $foodType) {
             echo "<option value='{$foodType->name}'>{$foodType->name}</option>";
         }
         ?>

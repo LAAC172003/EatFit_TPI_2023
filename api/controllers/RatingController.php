@@ -14,8 +14,7 @@ class RatingController
      */
     public function read(Request $request): ApiValue
     {
-        //["search_filters" => ["title", "category", "date_added"], "filter" => "category", "food_type"]
-        return new ApiValue(Rating::read(), 200);
+        return new ApiValue(Rating::read($request->getData(['idRecipe', 'idRating'], false)), 200);
     }
 
     /**
@@ -31,7 +30,7 @@ class RatingController
      */
     public function update(Request $request): ApiValue
     {
-        return new ApiValue(Rating::update($request->getData(["idRating","score","comment"], false)), 200);
+        return new ApiValue(Rating::update($request->getData(["idRating", "score", "comment"], false)), 200);
     }
 
     /**

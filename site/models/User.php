@@ -21,7 +21,7 @@ class User extends Model
             'username' => [self::RULE_REQUIRED],
             'email' => [self::RULE_REQUIRED, self::RULE_EMAIL],
             'password' => [self::RULE_REQUIRED, [self::RULE_MIN, 'min' => 8]],
-            'password_confirm' => [[self::RULE_MATCH, 'match' => 'password']],
+            'password_confirm' => [self::RULE_REQUIRED, [self::RULE_MATCH, 'match' => 'password']],
         ];
     }
 
@@ -38,7 +38,7 @@ class User extends Model
 
     public function save()
     {
-        $response = self::getJsonResult([
+        return self::getJsonResult([
             'url' => 'user',
             'method' => 'POST',
             'data' => [
@@ -48,18 +48,6 @@ class User extends Model
                 'confirm_password' => $this->password_confirm
             ]
         ]);
-        if (!$response) return false;
-        if ($response->value == null || $response->code != 201) {
-            Application::$app->session->setFlash('error', $response->message);
-            Application::$app->response->statusCode($response->code);
-            if ($response->message == "User already exists") {
-                $response->message = "L'utilisateur existe déjà";
-            }
-            Application::$app->session->setFlash('error', $response->message);
-            return false;
-        }
-        Application::$app->response->statusCode($response->code);
-        return $response;
     }
 
     public static function getUser($email, $password)

@@ -13,7 +13,8 @@ class Recipe extends Model
     public string $instructions = '';
     public int $calories = 0;
     public $date = '';
-    public string $category = "";
+
+    public array $categories = [];
     public array $image = [];
     public array $foodType = [];
     public int $idUser = 0;
@@ -78,11 +79,9 @@ class Recipe extends Model
                 'instructions' => $this->instructions,
                 'calories' => $this->calories,
                 'image' => $images,
-                'category' => $this->category,
+                'category' => $this->categories,
                 'food_type' => $this->foodType
             ];
-//            unset($data['image']);
-//            var_dump(json_encode($data));
             return self::getJsonResult([
                 'url' => 'recipe',
                 'method' => 'POST',
@@ -136,13 +135,18 @@ class Recipe extends Model
         ]);
     }
 
-    public function getFoodTypes()
+    public function update()
     {
+        $updates = [];
+        foreach ($this->attributes() as $attribute) {
+            if ($this->{$attribute} != 'idRecipe') continue;
+            $updates[$attribute] = $this->{$attribute};
+        }
         return self::getJsonResult([
-            'url' => 'food_types',
-            'method' => 'GET',
-            'data' => []
-        ]);
+            'url' => 'recipe',
+            'method' => 'PUT',
+            'data' => $updates
+        ], true);
     }
 }
 

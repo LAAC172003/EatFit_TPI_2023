@@ -59,8 +59,6 @@ class Recipe extends Model
         $user = self::getUserByToken();
         if (!$user) throw new Exception("Non autorisé", 401);
         self::validateRecipeData($data);
-
-
         $data = [
             'title' => $data['title'],
             'preparation_time' => $data['preparation_time'],
@@ -73,7 +71,6 @@ class Recipe extends Model
             'idUser' => $user['idUser'],
             'food_type' => $data['food_type']
         ];
-//        var_dump($data['image']);
         try {
             Application::$app->db->beginTransaction();
             self::insertRecipe($data, $user);
@@ -185,18 +182,12 @@ class Recipe extends Model
     private static function insertRecipeImages(array $data): void
     {
         if ($data['image'] == "") {
-            $data['image'] = match ($data['category']) {
-                "Petit déjeuner" => "/default/breakfast.jpg",
-                "Entrée" => "/default/appetizer.jpg",
-                "Collation" => "/default/snack.jpg",
-                "Déjeuner" => "/default/lunch.jpg",
-                "Dîner" => "/default/dinner.jpg",
-                "Dessert" => "/default/dessert.jpg",
-                default => throw new Exception('Catégorie invalide', 400),
-            };
+            $image = Application::$app->db->execute(
+                "SELECT image_path FROM categories WHERE name = :name",
+                [":name" => $data['category']])->getFirstRow()["image_path"];
             Application::$app->db->execute(
                 "SELECT insert_unique_image_name(:path, (SELECT idRecipe FROM recipes WHERE title = :title));",
-                [":path" => $data['image'], ":title" => $data['title']]
+                [":path" => $image, ":title" => $data['title']]
             );
         } else {
             foreach ($data['image'] as $images) {

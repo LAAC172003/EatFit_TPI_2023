@@ -38,7 +38,6 @@ class History extends Model
         $data = [
             'idRecipe' => $this->idRecipe
         ];
-
         return self::getJsonResult([
             'url' => 'history',
             'method' => 'POST',

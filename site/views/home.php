@@ -1,7 +1,9 @@
 <?php
 /** @var $model Recipe */
 
+use Eatfit\Site\Core\Application;
 use Eatfit\Site\Core\Form\Form;
+use Eatfit\Site\Models\FoodType;
 use Eatfit\Site\Models\Recipe;
 
 $this->title = 'Accueil';
@@ -26,13 +28,15 @@ function renderCarouselWithSearch($category, $recipesByCategory, $carouselId, $s
             <div class="track" id="track<?= $carouselId ?>">
                 <?php
                 foreach ($recipesToDisplay as $recipe) {
+                    $recipe->image_paths = !empty($recipe->image_paths) && str_contains($recipe->image_paths, ',') ? array_map('trim', explode(',', $recipe->image_paths)) : array($recipe->image_paths);
+
                     ?>
                     <div class="card-container">
                         <div class="container">
                             <div class="row">
                                 <div class="menu-item">
                                     <a href="/recipe/detail/<?= $recipe->recipe_id ?>"><img
-                                            src="https://www.mutuellebleue.fr/app/uploads/sites/2/2020/07/petit-dejeuner-complet.jpg"
+                                            src="<?= Application::$API_URL . "uploads/" . $recipe->image_paths[0] ?>"
                                             alt="<?= $recipe->recipe_id ?>" class="rounded"></a>
                                     <div class="ouioui">
                                         <div class="nonnon">
@@ -78,7 +82,7 @@ $form = Form::begin('', "post");
 
         <select id="foodtype-filter" name="foodtype-filter">
             <option value="">Tous les types d'aliments</option>
-            <?php foreach ($model->getFoodTypes()->value as $foodtype) { ?>
+            <?php foreach (FoodType::getFoodTypes()->value as $foodtype) { ?>
                 <option value="<?= $foodtype->name ?>"><?= $foodtype->name ?></option>
             <?php } ?>
         </select>

@@ -8,6 +8,7 @@ use Eatfit\Api\Core\Db\SqlResult;
 use Eatfit\Api\Core\Model;
 
 use Exception;
+use http\Exception\BadQueryStringException;
 
 class User extends Model
 {
@@ -48,7 +49,7 @@ class User extends Model
         if (!$email) throw new Exception("Email invalide", 400);
         $data = self::filterArray($data);
         if (strlen($data['password']) < 8) throw new Exception("Le mot de passe doit comporter au moins 8 caractères", 400);
-        if (!self::getUser($email)->isEmpty()) throw new Exception("L'utilisateur existe déjà", 409);
+        if (!self::getUser($email, $data['username'])->isEmpty()) throw new Exception("L'utilisateur existe déjà", 409);
         if ($data['password'] != $data['confirm_password']) throw new Exception("Les mots de passe ne correspondent pas", 400);
         $data = [
             'username' => $data['username'],
@@ -62,7 +63,7 @@ class User extends Model
         } catch (Exception $e) {
             throw new Exception("Erreur lors de la création de l'utilisateur", 500);
         }
-        return self::getUser($data['email'])->getFirstRow();
+        return self::getUser($data['email'], $data['username'])->getFirstRow();
     }
 
     /**
@@ -75,31 +76,35 @@ class User extends Model
     public static function update(array $data): array|string
     {
         $token = null;
-        $dataToken = self::getDataToken(false);
-        $user = self::getUser($dataToken['payload']['email']);
-        if ($user->isEmpty()) throw new Exception("Utilisateur non trouvé", 404);
-        $idUser = $user->getFirstRow()['idUser'];
+        $user = parent::getUserByToken(false);
+        $idUser = $user['idUser'];
         $updates = [];
         if ($data == null) throw new Exception("Aucune donnée à mettre à jour", 400);
+        $data = self::filterArray($data);
         if (isset($data['email']) && $data['email'] != "") {
             if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) throw new Exception("Email invalide", 400);
-            $updates['email'] = $data['email'];
+            if (self::getUser($data['email'])->isEmpty()) $updates['email'] = $data['email'];
+            else throw new Exception("Cet utilisateur existe déjà", 409);
         }
-        if (isset($data['username']) && $data['username'] != "") $updates['username'] = $data['username'];
+        if (isset($data['username']) && $data['username'] != "") {
+            if (self::getUser(null, $data['username'])->isEmpty()) $updates['username'] = $data['username'];
+            else throw new Exception("Cette utilisateur existe déjà", 409);
+        }
         if (isset($data['password']) && $data['password'] != "") {
             if (strlen($data['password']) < 8) throw new Exception("Le mot de passe doit comporter au moins 8 caractères", 400);
+            if (!isset($data['confirm_password']) || $data['password'] != $data['confirm_password']) throw new Exception("Les mots de passe ne correspondent pas", 400);
             $updates['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
         }
         $sb = "";
         if (count($updates) > 0) {
             $sb = "Utilisateur mis à jour avec succès :";
             try {
-                $updatedUserData = array_merge($dataToken['payload'], $updates);
-                $newToken = self::generateJWT($updatedUserData, $updatedUserData['exp']);
+                unset($user['idUser'], $user['token']);
+                $updatedUserData = array_merge($user, $updates);
+                $newToken = self::generateJWT($updatedUserData, $updatedUserData['expiration']);
                 foreach ($updates as $key => $value) $sb .= " $key = $value";
                 $token = $newToken;
                 $updates['token'] = $newToken;
-
                 Application::$app->db->execute("UPDATE users SET " . implode(", ", array_map(fn($key) => "$key = :$key", array_keys($updates))) . " WHERE idUser = :idUser", array_merge($updates, [":idUser" => $idUser]));
             } catch (Exception $e) {
                 throw new Exception("Erreur lors de la mise à jour de l'utilisateur", 500);
@@ -118,12 +123,9 @@ class User extends Model
      */
     public static function delete(): string
     {
-        $dataToken = self::getDataToken(false);
-        $user = self::getUser($dataToken['payload']['email']);
-        if ($user->isEmpty()) throw new Exception("Utilisateur non trouvé", 404);
-        $idUser = $user->getFirstRow()['idUser'];
+        $user = parent::getUserByToken();
         try {
-            Application::$app->db->execute("DELETE FROM users WHERE idUser = :idUser", [":idUser" => $idUser]);
+            Application::$app->db->execute("DELETE FROM users WHERE idUser = :idUser", [":idUser" => $user['idUser']]);
         } catch (Exception $e) {
             throw new Exception("Erreur lors de la suppression de l'utilisateur", 500);
         }
@@ -133,16 +135,17 @@ class User extends Model
     /**
      * Vérifie si un utilisateur existe dans la base de données.
      *
-     * @param string $email L'adresse e-mail de l'utilisateur.
-     * @param string $password Le mot de passe de l'utilisateur.
+     * @param $email
+     * @param string $password
      * @return array|Exception Les informations de l'utilisateur si l'utilisateur existe, une exception sinon.
      * @throws Exception
      */
-    private static function getUserInfo(string $email, string $password): array|Exception
+    private static function getUserInfo($email, string $password): array|Exception
     {
-        $userTab = self::getUser($email);
-        if (!$userTab->getValues()) throw new Exception("Utilisateur ou mot de passe invalide", 400);
-        $user = $userTab->getFirstRow();
+        $user = Application::$app->db->execute("SELECT * FROM users WHERE email = :email", [":email" => $email]);
+
+        if ($user->isEmpty()) throw new Exception("Utilisateur ou mot de passe invalide", 400);
+        $user = $user->getFirstRow();
         if (password_verify($password, $user['password'])) {
             unset($user['password']);
             if ($user['expiration'] < time()) $user['expiration'] = 'expiré';
@@ -184,10 +187,35 @@ class User extends Model
      * @return SqlResult Les informations de l'utilisateur.
      * @throws Exception
      */
-    public static function getUser(string $email): SqlResult
+    public static function getUser(string $email = null, string $username = null): SqlResult
+    {
+        $query = "SELECT * FROM users ";
+        $params = [];
+        if ($email != null && $username == null) {
+            $query .= " WHERE email = :email";
+            $params = [":email" => $email];
+        } elseif ($username != null && $email == null) {
+            $query .= " WHERE username = :username";
+            $params = [":username" => $username];
+        } else {
+            $query .= "WHERE email = :email OR username = :username";
+            $params = [":email" => $email, ":username" => $username];
+        }
+        try {
+            return Application::$app->db->execute($query, $params);
+        } catch (Exception $e) {
+            throw new Exception("Un problème est survenu", 500);
+        }
+    }
+
+    public static function getUserByEmail($email)
     {
         try {
-            return Application::$app->db->execute("SELECT * FROM users WHERE email = :email", [":email" => $email]);
+            return Application::$app->db->execute(
+                "SELECT * FROM users WHERE email = :email",
+                [
+                    ":email" => $email
+                ]);
         } catch (Exception $e) {
             throw new Exception("Un problème est survenu", 500);
         }

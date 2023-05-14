@@ -39,13 +39,13 @@ class UserController
      */
     public function update(Request $request): ApiValue
     {
-        return new ApiValue(User::update($request->getData(['email', "password", "username"], false)), 200);
+        return new ApiValue(User::update($request->getData(['email', "password","confirm_password", "username"], false)), 200);
     }
 
     /**
      * @throws Exception
      */
-    public function delete(Request $request): ApiValue
+    public function delete(): ApiValue
     {
         return new ApiValue(User::delete(), 200);
     }

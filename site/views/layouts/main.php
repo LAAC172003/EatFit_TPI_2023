@@ -40,6 +40,9 @@ use Eatfit\Site\Core\Application;
                     <li class="nav-item">
                         <a class="nav-link font-weight-bold" href="/history">Historique des recettes consommées</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link font-weight-bold" href="/food_type">Ajouter nouveau type de nourriture</a>
+                    </li>
                     <?php
                 }
                 ?>
@@ -54,6 +57,7 @@ use Eatfit\Site\Core\Application;
                     <li class="nav-item">
                         <a class="nav-link font-weight-bold" href="/register">Inscription</a>
                     </li>
+
                     <?php
                 } else {
                     ?>

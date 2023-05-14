@@ -16,9 +16,20 @@ class Rating extends Model
      * @return array La liste de toutes les évaluations.
      * @throws Exception Si une erreur se produit lors de l'exécution de la requête.
      */
-    public static function read(): array
+    public static function read($data): array
     {
-        return Application::$app->db->execute("SELECT * FROM ratings")->getValues();
+        if (isset($data['idRecipe'])) {
+            $query = "SELECT idRating,ratings.idUser,score,comment,users.username FROM `ratings` JOIN users ON ratings.idUser = users.idUser ";
+            $query .= " WHERE idRecipe = :idRecipe";
+            $params = [":idRecipe" => $data['idRecipe']];
+            $result = Application::$app->db->execute($query, $params);
+            if ($result->isEmpty()) throw new Exception("Aucune évaluation trouvée", 404);
+            return $result->getValues();
+        }
+        if (!isset($data['idRating'])) throw new Exception("L'ID de l'évaluation est requis", 400);
+        $rating = self::getRatingById($data['idRating']);
+        if ($rating->isEmpty()) throw new Exception("Aucune évaluation trouvée", 404);
+        return $rating->getValues();
     }
 
     /**
@@ -65,22 +76,18 @@ class Rating extends Model
         $data = self::filterArray($data);
         if (!isset($data['idRating'])) throw new Exception("L'ID de l'évaluation est requis", 400);
         elseif (!is_numeric($data['idRating'])) throw new Exception("L'ID de l'évaluation doit être un nombre", 400);
-        if (self::getUserByToken()['idUser'] != Application::$app->db->execute("SELECT idUser FROM ratings WHERE idRating = :idRating", [":idRating" => $data['idRating']])->getFirstRow()['idUser']) {
-            throw new Exception("Vous ne pouvez pas mettre à jour cette évaluation", 403);
-        }
-        if (!isset($data['score'])) throw new Exception("Le score est requis", 400);
-        if ($data['score'] < 1 || $data['score'] > 5) throw new Exception("Le score doit être entre 1 et 5", 400);
+        $rating = self::getRatingById($data['idRating']);
+        if ($rating->isEmpty()) throw new Exception("Évaluation introuvable", 404);
+        if ($rating->getFirstRow()['idUser'] != self::getUserByToken()['idUser']) throw new Exception("Vous ne pouvez pas mettre à jour cette évaluation", 403);
+        if (isset($data['score'])) if ($data['score'] < 1 || $data['score'] > 5) throw new Exception("Le score doit être entre 1 et 5", 400);
         $updates = [];
         foreach ($data as $key => $value) {
-            if ($key == "idRating") {
-                continue;
-            }
+            if ($key == "idRating") continue;
             if (isset($value) && $value != "") {
                 $updates[$key] = $value;
             }
         }
         $sb = "L'évaluation a été mise à jour avec succès :";
-
         try {
             $query = "UPDATE ratings SET " . implode(", ", array_map(fn($key) => "$key = :$key", array_keys($updates))) . " WHERE idRating = :idRating";
             Application::$app->db->execute($query, array_merge($updates, [":idRating" => $data['idRating']]));
@@ -101,9 +108,11 @@ class Rating extends Model
     public static function delete(array $data): string
     {
         $data = self::filterArray($data);
-        if (!isset($data['idRating'])) throw new Exception("L'ID de l'évaluation est requis", 400); elseif (!is_numeric($data['idRating'])) throw new Exception("L'ID de l'évaluation doit être un nombre", 400);
-        if (self::getRatingById($data['idRating'])->isEmpty()) throw new Exception("Évaluation introuvable", 404);
-        if (self::getUserByToken()['idUser'] != Application::$app->db->execute("SELECT idUser FROM ratings WHERE idRating = :idRating", [":idRating" => $data['idRating']])->getFirstRow()['idUser']) throw new Exception("Vous ne pouvez pas supprimer cette évaluation", 403);
+        if (!isset($data['idRating'])) throw new Exception("L'ID de l'évaluation est requis", 400);
+        elseif (!is_numeric($data['idRating'])) throw new Exception("L'ID de l'évaluation doit être un nombre", 400);
+        $rating = self::getRatingById($data['idRating']);
+        if ($rating->isEmpty()) throw new Exception("Évaluation introuvable", 404);
+        if ($rating->getFirstRow()['idUser'] != self::getUserByToken()['idUser']) throw new Exception("Vous ne pouvez pas supprimer cette évaluation", 403);
         try {
             Application::$app->db->execute("DELETE FROM ratings WHERE idRating = :idRating", [":idRating" => $data['idRating']]);
         } catch (Exception $e) {

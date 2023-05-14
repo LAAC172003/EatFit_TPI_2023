@@ -27,9 +27,17 @@ $app->router->post('/', [SiteController::class, 'home']);
 $app->router->get('/recipe', [RecipeController::class, 'create']);
 $app->router->post('/recipe', [RecipeController::class, 'create']);
 
-$app->router->get('/recipe/detail/{idRecipe}', [RecipeController::class, 'read']);
+$app->router->get('/recipe/detail/{idRecipe}', [RecipeController::class, 'detail']);
+$app->router->post('/recipe/detail/{idRecipe}', [RecipeController::class, 'detail']);
 $app->router->get('recipe/edit/{idRecipe}', [RecipeController::class, 'update']);
 $app->router->get('recipe/delete/{idRecipe}', [RecipeController::class, 'delete']);
+
+$app->router->get('rating/delete/{idRating}', [RecipeController::class, 'deleteRating']);
+$app->router->get('rating/update/{idRating}', [RecipeController::class, 'updateRating']);
+$app->router->post('rating/update/{idRating}', [RecipeController::class, 'updateRating']);
+
+$app->router->get('/food_type', [RecipeController::class, 'addFoodType']);
+$app->router->post('/food_type', [RecipeController::class, 'addFoodType']);
 
 $app->router->get('/login', [UserController::class, 'login']);
 $app->router->post('/login', [UserController::class, 'login']);

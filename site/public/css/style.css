@@ -401,3 +401,99 @@ a {
 .consume-recipe-button:hover {
     background-color: var(--font-color-dark);
 }
+
+.text-highlight {
+    color: var(--font-color-highlight);
+}
+
+.border-dark {
+    border-color: var(--font-color-dark);
+}
+
+.label-dark {
+    color: var(--font-color-dark);
+    font-size: 1.5em;
+}
+
+.btn-primary-custom {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-danger-custom {
+    background-color: var(--font-color-dark);
+    color: white;
+}
+.comment-section {
+    width: 100%;
+    max-width: 750px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: var(--background-color-light);
+    color: var(--font-color-dark);
+    box-shadow: var(--box-shadow);
+    border-radius: 10px;
+    font-family: var(--font-family-main);
+}
+
+.comment {
+    margin-bottom: 20px;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: var(--background-color-dark);
+    color: var(--font-color-light);
+}
+
+.comment-author {
+    font-weight: bold;
+    color: var(--font-color-main);
+    margin-bottom: 10px;
+}
+
+.comment-body {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--font-color-light);
+}
+
+.comment-footer {
+    margin-top: 10px;
+    font-size: 0.875rem;
+    color: var(--font-color-light);
+}
+
+.reply-button {
+    color: var(--primary-color);
+    cursor: pointer;
+}
+
+.reply-button:hover {
+    text-decoration: underline;
+}
+
+.reply {
+    margin-top: 20px;
+    margin-left: 40px;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: var(--background-color-dark);
+    color: var(--font-color-light);
+}
+
+.reply-author {
+    font-weight: bold;
+    color: var(--font-color-main);
+    margin-bottom: 10px;
+}
+
+.reply-body {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--font-color-light);
+}
+
+.reply-footer {
+    margin-top: 10px;
+    font-size: 0.875rem;
+    color: var(--font-color-light);
+}
