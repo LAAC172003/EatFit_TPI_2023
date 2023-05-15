@@ -87,8 +87,8 @@ class Recipe extends Model
         $imageContents = [];
         if ($images['error'][0] == 4) return [];
         for ($i = 0; $i < $numberOfFiles; $i++) {
-            if ($images['error'][$i] !== UPLOAD_ERR_OK) return ['error' => 'Upload error for file ' . $images['name'][$i]];
-            if (!getimagesize($images['tmp_name'][$i])) return ['error' => 'File ' . $images['name'][$i] . ' is not an image'];
+            if ($images['error'][$i] !== UPLOAD_ERR_OK) return ['error' => 'Erreur pour le fichier ' . $images['name'][$i]];
+            if (!getimagesize($images['tmp_name'][$i])) return ['error' => 'Le fichier ' . $images['name'][$i] . ' n\'est pas une image'];
             $imageContent = file_get_contents($images['tmp_name'][$i]);
             $imageContents[$images['name'][$i]] = base64_encode($imageContent);
         }

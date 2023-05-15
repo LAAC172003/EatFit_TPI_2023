@@ -163,11 +163,11 @@ class Model
     public function errorMessages(): array
     {
         return [
-            self::RULE_REQUIRED => 'This field is required',
-            self::RULE_EMAIL => 'This field must be valid email address',
-            self::RULE_MIN => 'Min length of this field must be {min}',
-            self::RULE_MAX => 'Max length of this field must be {max}',
-            self::RULE_MATCH => 'This field must be the same as {match}'
+            self::RULE_REQUIRED => 'Le champ {field} est requis',
+            self::RULE_EMAIL => 'Le champ {field} doit être une adresse email valide',
+            self::RULE_MIN => 'Le champ {field} doit contenir au moins {min} caractères',
+            self::RULE_MAX => 'Le champ {field} doit contenir au maximum {max} caractères',
+            self::RULE_MATCH => 'Le champ {field} doit être identique au champ {match}'
         ];
     }
 

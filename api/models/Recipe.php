@@ -172,7 +172,6 @@ class Recipe extends Model
     private static function validateRecipeData(array $data): void
     {
         $data = self::filterArray($data);
-        if (!self::getRecipe($data['title'])->isEmpty()) throw new Exception("La recette existe déjà", 400);
         $categories = Application::$app->db->execute("SELECT * FROM categories")->getColumn("name");
         $food_types = Application::$app->db->execute("SELECT * FROM food_types")->getColumn("name");
         $difficulties = ["facile", "moyen", "difficile"];

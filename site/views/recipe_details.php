@@ -28,6 +28,7 @@ $comments = $ratings->getRatingByIdRecipe()->value;
     <p> Catégories : <?= implode(",", $recipe->categories) ?></p>
     <p id="recipe-difficulty">Difficulté : <?= $recipe->difficulty ?></p>
     <p id="recipe-calories">Calories : <?= $recipe->calories ?></p>
+    <p id="recipe-calories">Note moyenne : <?=round($recipe->average_rating,1) ?></p>
     <div class="row">
         <div class="col-md-12">
             <h3 class="instructions-title">Instructions</h3>
