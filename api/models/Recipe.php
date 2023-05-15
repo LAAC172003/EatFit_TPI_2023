@@ -151,7 +151,7 @@ class Recipe extends Model
         ];
         try {
             Application::$app->db->beginTransaction();
-            self::insertRecipe($data, $user);
+            self::insertRecipe($data);
             self::insertRecipeCategories($data);
             self::insertRecipeFoodType($data);
             self::insertRecipeImages($data);
@@ -207,10 +207,10 @@ class Recipe extends Model
      * Insère une recette dans la base de données.
      *
      * @param array $data Les données de la recette
-     * @param array $user L'utilisateur
+     * @param array $user Utilisation
      * @throws Exception En cas d'erreur lors de l'insertion de la recette
      */
-    private static function insertRecipe(array $data, array $user): void
+    private static function insertRecipe(array $data): void
     {
         Application::$app->db->execute("INSERT INTO recipes
             (title, preparation_time, difficulty, instructions, calories,created_at,idUser)

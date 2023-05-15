@@ -10,13 +10,10 @@ $this->title = 'Accueil';
 function renderCarouselWithSearch($category, $recipesByCategory, $carouselId, $searchQuery, $categoryFilter, $foodtypeFilter): void
 {
     $recipesToDisplay = array_filter($recipesByCategory, function ($recipe) use ($searchQuery, $categoryFilter, $foodtypeFilter) {
-        // Check if the search query is present in the recipe title, category, or date
         $titleContainsSearch = empty($searchQuery) || stripos($recipe->recipe_title, $searchQuery) !== false;
         $categoryContainsSearch = empty($searchQuery) || stripos($recipe->categories, $searchQuery) !== false;
         $dateContainsSearch = empty($searchQuery) || stripos($recipe->created_at, $searchQuery) !== false;
-        // Check if the recipe's category matches the selected category filter
         $categoryMatchesFilter = empty($categoryFilter) || $recipe->categories == $categoryFilter;
-        // Check if the recipe's foodtype matches the selected foodtype filter
         $foodtypeMatchesFilter = empty($foodtypeFilter) || stripos($recipe->foodtypes_with_percentages, $foodtypeFilter) !== false;
         return ($titleContainsSearch || $categoryContainsSearch || $dateContainsSearch) && $categoryMatchesFilter && $foodtypeMatchesFilter;
     });
@@ -38,7 +35,7 @@ function renderCarouselWithSearch($category, $recipesByCategory, $carouselId, $s
                                     <a href="/recipe/detail/<?= $recipe->recipe_id ?>"><img
                                             src="<?= Application::$API_URL . "uploads/" . $recipe->image_paths[0] ?>"
                                             alt="<?= $recipe->recipe_id ?>" class="rounded"></a>
-                                    <div class="ouioui">
+                                    <div>
                                         <h3 style="text-align: left;"><?= $recipe->recipe_title ?></h3>
                                         <p style="text-align: left;"><?= $recipe->recipe_instructions ?></p>
                                     </div>
