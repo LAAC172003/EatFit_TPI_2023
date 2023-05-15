@@ -60,7 +60,7 @@
                         <label for="username" class="form-label">Nom d'utilisateur <span
                                 class="obligatoire">*</span></label>
                         <input type="text" class="form-control" id="username"
-                               required="required"    placeholder="Entrez votre nom d'utilisateur">
+                               required="required" placeholder="Entrez votre nom d'utilisateur">
                     </div>
                     <div class="mb-3">
                         <label for="email" class="form-label">Email <span class="obligatoire">*</span></label>

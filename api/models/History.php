@@ -64,6 +64,13 @@ class History extends Model
         return "Historique supprimé avec succès";
     }
 
+    private static function getHistory($idConsumedRecipe)
+    {
+        return Application::$app->db->execute("SELECT * FROM consumed_recipes WHERE idConsumedRecipe = :idConsumedRecipe", [
+            ":idConsumedRecipe" => $idConsumedRecipe
+        ]);
+    }
+
     /**
      * Met à jour une recette dans l'historique de l'utilisateur.
      *
@@ -115,12 +122,5 @@ class History extends Model
         }
         if ($history->isEmpty()) throw new Exception("Aucun historique trouvé", 404);
         return $history->getValues();
-    }
-
-    private static function getHistory($idConsumedRecipe)
-    {
-        return Application::$app->db->execute("SELECT * FROM consumed_recipes WHERE idConsumedRecipe = :idConsumedRecipe", [
-            ":idConsumedRecipe" => $idConsumedRecipe
-        ]);
     }
 }

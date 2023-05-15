@@ -72,6 +72,10 @@ class RecipeController
 
 
     /**
+     * Ajoute un nouveau type de nourriture.
+     *
+     * @param Request $request La requête contenant les données du nouveau type de nourriture.
+     * @return ApiValue Le nouveau type de nourriture créé, avec un code de statut HTTP 201.
      * @throws Exception
      */
     public function addFoodType(Request $request): ApiValue
@@ -80,6 +84,9 @@ class RecipeController
     }
 
     /**
+     * Récupère les catégories de recettes disponibles.
+     *
+     * @return ApiValue Les catégories de recettes, avec un code de statut HTTP 200.
      * @throws Exception
      */
     public function getCategories(): ApiValue
@@ -88,6 +95,9 @@ class RecipeController
     }
 
     /**
+     * Récupère les types de nourriture disponibles.
+     *
+     * @return ApiValue Les types de nourriture, avec un code de statut HTTP 200.
      * @throws Exception
      */
     public function getFoodTypes(): ApiValue

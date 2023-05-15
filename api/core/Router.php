@@ -14,6 +14,11 @@ class Router
         $this->request = $request;
     }
 
+    public function get(string $url, mixed $callback): void
+    {
+        $this->addRoute('get', $url, $callback);
+    }
+
     /**
      * Ajoute une route pour une méthode HTTP spécifiée
      *
@@ -25,11 +30,6 @@ class Router
     private function addRoute(string $method, string $url, mixed $callback): void
     {
         $this->routeMap[strtolower($method)][$url] = $callback;
-    }
-
-    public function get(string $url, mixed $callback): void
-    {
-        $this->addRoute('get', $url, $callback);
     }
 
     public function post(string $url, mixed $callback): void
@@ -47,19 +47,37 @@ class Router
         $this->addRoute('delete', $url, $callback);
     }
 
-    public function patch(string $url, mixed $callback): void
-    {
-        $this->addRoute('patch', $url, $callback);
-    }
-
     public function getRoutes(): array
     {
         return $this->routeMap;
     }
 
-    public function getRouteMap(string $method): array
+    /**
+     * Résout la requête HTTP en appelant le bon callback
+     *
+     * @throws Exception Si la méthode HTTP n'est pas autorisée ou si aucune route n'a été trouvée pour l'URL de la requête courante
+     * @return mixed La réponse retournée par le callback appelé
+     */
+    public function resolve(): mixed
     {
-        return $this->routeMap[strtolower($method)] ?? [];
+        $method = $this->request->getMethod();
+        $url = $this->request->getUrl();
+
+        $callback = $this->routeMap[$method][$url] ?? false;
+        if (!$callback) {
+            $callback = $this->getCallback();
+            $routes = [];
+            foreach ($this->routeMap as $key => $value) {
+                foreach ($value as $k => $v) {
+                    if (in_array($k, $routes)) continue;
+                    $routes[] = $k;
+                }
+            }
+            if (in_array($url, $routes)) throw new Exception("La méthode $method n'est pas autorisée pour la route : '$url'", 405);
+            if ($callback === false) throw new Exception("Aucune route trouvée pour la route : $url", 404);
+        }
+        if (is_array($callback)) $callback = [new $callback[0], $callback[1]];
+        return call_user_func($callback, $this->request);
     }
 
     /**
@@ -103,31 +121,8 @@ class Router
         return false;
     }
 
-    /**
-     *
-     * Résout la requête HTTP en appelant le bon callback
-     * @throws Exception Si la méthode HTTP n'est pas autorisée ou si aucune route n'a été trouvée pour l'URL de la requête courante
-     * @return mixed La réponse retournée par le callback appelé
-     */
-    public function resolve(): mixed
+    public function getRouteMap(string $method): array
     {
-        $method = $this->request->getMethod();
-        $url = $this->request->getUrl();
-
-        $callback = $this->routeMap[$method][$url] ?? false;
-        if (!$callback) {
-            $callback = $this->getCallback();
-            $routes = [];
-            foreach ($this->routeMap as $key => $value) {
-                foreach ($value as $k => $v) {
-                    if (in_array($k, $routes)) continue;
-                    $routes[] = $k;
-                }
-            }
-            if (in_array($url, $routes)) throw new Exception("La méthode $method n'est pas autorisée pour la route : '$url'", 405);
-            if ($callback === false) throw new Exception("Aucune route trouvée pour la route : $url", 404);
-        }
-        if (is_array($callback)) $callback = [new $callback[0], $callback[1]];
-        return call_user_func($callback, $this->request);
+        return $this->routeMap[strtolower($method)] ?? [];
     }
 }

@@ -29,7 +29,7 @@ function renderCarouselWithSearch($category, $recipesByCategory, $carouselId, $s
                 <?php
                 foreach ($recipesToDisplay as $recipe) {
                     $recipe->image_paths = !empty($recipe->image_paths) && str_contains($recipe->image_paths, ',') ? array_map('trim', explode(',', $recipe->image_paths)) : array($recipe->image_paths);
-
+                    if (str_contains($recipe->image_paths[0], 'default')) $recipe->image_paths = [explode('_', $recipe->image_paths[0])[1]];
                     ?>
                     <div class="card-container">
                         <div class="container">
@@ -39,11 +39,6 @@ function renderCarouselWithSearch($category, $recipesByCategory, $carouselId, $s
                                             src="<?= Application::$API_URL . "uploads/" . $recipe->image_paths[0] ?>"
                                             alt="<?= $recipe->recipe_id ?>" class="rounded"></a>
                                     <div class="ouioui">
-                                        <div class="nonnon">
-                                            <p class="bulle"><?= "test" ?></p>
-                                            <p class="bulle"><?= "test" ?></p>
-                                            <p class="bulle"><?= "test" ?></p>
-                                        </div>
                                         <h3 style="text-align: left;"><?= $recipe->recipe_title ?></h3>
                                         <p style="text-align: left;"><?= $recipe->recipe_instructions ?></p>
                                     </div>

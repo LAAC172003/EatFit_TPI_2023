@@ -5,6 +5,7 @@ namespace Eatfit\Site\Core;
 use Eatfit\Site\Core\Db\Database;
 use Eatfit\Site\Core\Db\DbModel;
 use Eatfit\Site\Models\User;
+use Exception;
 
 class Application
 {
@@ -22,7 +23,13 @@ class Application
     public View $view;
     public $user;
 
-    public function __construct($rootDir, $config)
+    /**
+     * Constructeur de l'application.
+     *
+     * @param string $rootDir Le répertoire racine de l'application.
+     * @param array $config La configuration de l'application.
+     */
+    public function __construct(string $rootDir, array $config)
     {
         $this->user = null;
         self::$API_URL = $config['API_URL'];
@@ -45,12 +52,32 @@ class Application
         }
     }
 
+    /**
+     * Déconnecte l'utilisateur en supprimant son token de la session.
+     */
+    public function logout(): void
+    {
+        $this->user = null;
+        self::$app->session->remove('user');
+    }
+
+    /**
+     * Vérifie si l'utilisateur est un invité (non authentifié).
+     *
+     * @return bool True si l'utilisateur est un invité, False sinon.
+     */
     public static function isGuest(): bool
     {
         return !self::$app->user;
     }
 
-    public function login($user)
+    /**
+     * Connecte l'utilisateur en enregistrant son token dans la session et effectue une redirection.
+     *
+     * @param mixed $user Les informations de l'utilisateur.
+     * @return bool True si la connexion réussit, False sinon.
+     */
+    public function login(mixed $user): bool
     {
         Application::$app->session->set('user', $user->value->token);
         $this->response->statusCode($user->code);
@@ -58,17 +85,14 @@ class Application
         return true;
     }
 
-    public function logout(): void
-    {
-        $this->user = null;
-        self::$app->session->remove('user');
-    }
-
+    /**
+     * Lance l'application.
+     */
     public function run(): void
     {
         try {
             echo $this->router->resolve();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             echo $this->router->renderView('_error', [
                 'exception' => $e,
             ]);

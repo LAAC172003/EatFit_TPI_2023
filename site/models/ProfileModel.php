@@ -2,9 +2,8 @@
 
 namespace Eatfit\Site\models;
 
-use Eatfit\Site\Core\Application;
 use Eatfit\Site\Core\Model;
-use http\Exception\BadQueryStringException;
+use Exception;
 
 class ProfileModel extends Model
 {
@@ -24,7 +23,7 @@ class ProfileModel extends Model
         ];
     }
 
-    public function labels()
+    public function labels(): array
     {
         return [
             'username' => 'Name:',
@@ -34,13 +33,8 @@ class ProfileModel extends Model
         ];
     }
 
-    public function attributes()
-    {
-        return ['username', 'email', 'password', 'confirm_password'];
-    }
-
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function update()
     {
@@ -54,6 +48,11 @@ class ProfileModel extends Model
             'method' => 'PUT',
             'data' => $updates
         ], true);
+    }
+
+    public function attributes(): array
+    {
+        return ['username', 'email', 'password', 'confirm_password'];
     }
 
     public function delete()

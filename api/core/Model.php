@@ -28,22 +28,6 @@ abstract class Model
     }
 
     /**
-     * Récupère le jeton d'authentification à partir des en-têtes de la requête.
-     *
-     * @return string Le jeton d'authentification
-     * @throws Exception Si le jeton est invalide ou manquant
-     */
-    private static function getToken(): string
-    {
-        $headers = getallheaders();
-        if (!isset($headers['Authorization'])) {
-            throw new Exception("Jeton expiré ou invalide", 498);
-        }
-        return explode(" ", $headers['Authorization'])[1];
-    }
-
-
-    /**
      * Vérifie si le jeton d'authentification est valide.
      *
      * @param bool $expiration Vérifie l'expiration du jeton si true
@@ -61,6 +45,51 @@ abstract class Model
             }
         }
         return $data;
+    }
+
+    /**
+     * Décode un JWT et retourne ses composants.
+     *
+     * @param string $jwt Le JWT à décoder
+     * @return array Les composants du JWT
+     * @throws Exception Si le JWT est invalide
+     */
+    private static function decodeJWT(string $jwt): array
+    {
+        $parts = explode('.', $jwt);
+        if (count($parts) !== 3) {
+            throw new Exception('Format JWT invalide', 498);
+        }
+        $headers = json_decode(self::urlDecode($parts[0]), true);
+        $payload = json_decode(self::urlDecode($parts[1]), true);
+        $signature = self::urlDecode($parts[2]);
+        return ['headers' => $headers, 'payload' => $payload, 'signature' => $signature];
+    }
+
+    /**
+     * Décode une chaîne encodée en base64 URL-safe.
+     *
+     * @param string $data La chaîne à décoder
+     * @return false|string La chaîne décodée
+     */
+    private static function urlDecode(string $data): false|string
+    {
+        return base64_decode(strtr($data, '-_', '+/'));
+    }
+
+    /**
+     * Récupère le jeton d'authentification à partir des en-têtes de la requête.
+     *
+     * @return string Le jeton d'authentification
+     * @throws Exception Si le jeton est invalide ou manquant
+     */
+    private static function getToken(): string
+    {
+        $headers = getallheaders();
+        if (!isset($headers['Authorization'])) {
+            throw new Exception("Jeton expiré ou invalide", 498);
+        }
+        return explode(" ", $headers['Authorization'])[1];
     }
 
     /**
@@ -100,6 +129,17 @@ abstract class Model
     }
 
     /**
+     * Encode une chaîne en base64 URL-safe.
+     *
+     * @param false|string $json_encode La chaîne à encoder
+     * @return array|string La chaîne encodée en base64 URL-safe
+     */
+    private static function urlEncode(false|string $json_encode): array|string
+    {
+        return str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($json_encode));
+    }
+
+    /**
      * Récupère les informations de l'utilisateur à partir du jeton d'authentification.
      *
      * @param bool $expiration Vérifie l'expiration du jeton si true
@@ -119,46 +159,5 @@ abstract class Model
         if ($user->isEmpty()) throw new Exception("Utilisateur introuvable", 404);
         unset($user->getFirstRow()['password']);
         return $user->getFirstRow();
-    }
-
-    /**
-     * Encode une chaîne en base64 URL-safe.
-     *
-     * @param false|string $json_encode La chaîne à encoder
-     * @return array|string La chaîne encodée en base64 URL-safe
-     */
-    private static function urlEncode(false|string $json_encode): array|string
-    {
-        return str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($json_encode));
-    }
-
-    /**
-     * Décode un JWT et retourne ses composants.
-     *
-     * @param string $jwt Le JWT à décoder
-     * @return array Les composants du JWT
-     * @throws Exception Si le JWT est invalide
-     */
-    private static function decodeJWT(string $jwt): array
-    {
-        $parts = explode('.', $jwt);
-        if (count($parts) !== 3) {
-            throw new Exception('Format JWT invalide', 498);
-        }
-        $headers = json_decode(self::urlDecode($parts[0]), true);
-        $payload = json_decode(self::urlDecode($parts[1]), true);
-        $signature = self::urlDecode($parts[2]);
-        return ['headers' => $headers, 'payload' => $payload, 'signature' => $signature];
-    }
-
-    /**
-     * Décode une chaîne encodée en base64 URL-safe.
-     *
-     * @param string $data La chaîne à décoder
-     * @return false|string La chaîne décodée
-     */
-    private static function urlDecode(string $data): false|string
-    {
-        return base64_decode(strtr($data, '-_', '+/'));
     }
 }

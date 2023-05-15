@@ -15,14 +15,22 @@ class HistoryController extends Controller
         $this->registerMiddleware(new AuthMiddleware(['history', 'deleteHistory', 'addToHistory']));
     }
 
-    public function history(Request $request): string
+    /**
+     * Affiche l'historique des recettes consultées par l'utilisateur.
+     *
+     * @return string Le contenu HTML de la page d'historique.
+     */
+    public function history(): string
     {
         $historyModel = new History();
-//        $historyModel->idUser = Application::$app->user->idUser;
-//        $historyModel->loadData($historyModel->getHistory());
         return $this->render('history', ['model' => $historyModel]);
     }
 
+    /**
+     * Supprime une recette de l'historique.
+     *
+     * @param Request $request La requête HTTP.
+     */
     public function deleteHistory(Request $request): void
     {
         $historyModel = new History();
@@ -33,6 +41,11 @@ class HistoryController extends Controller
         Application::$app->response->redirect('/history');
     }
 
+    /**
+     * Ajoute une recette à l'historique.
+     *
+     * @param Request $request La requête HTTP.
+     */
     public function addToHistory(Request $request): void
     {
         if (Application::isGuest()) {

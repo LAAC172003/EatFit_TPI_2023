@@ -9,7 +9,6 @@ class History extends Model
     public int $idRecipe = 0;
     public string $title = '';
     public string $consumption_date = '';
-    public string $meal_time = '';
     public int $idUser = 0;
     public int $idConsumedRecipe = 0;
 

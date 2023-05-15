@@ -38,7 +38,7 @@ $this->title = 'Ajouter une recette';
                     <?php
                     $categories = array();
                     foreach ($model->getCategories()->value as $category) $categories[$category->name] = $category->name;
-                    echo $form->field($model, 'category')->selectField($categories) ?>
+                    echo $form->field($model, 'categories')->selectField($categories) ?>
                 </div>
                 <div id="foodtype-container"></div>
 

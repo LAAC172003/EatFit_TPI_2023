@@ -7,7 +7,6 @@ use Eatfit\Site\Controllers\RecipeController;
 use Eatfit\Site\Controllers\SiteController;
 use Eatfit\Site\Controllers\UserController;
 use Eatfit\Site\Core\Application;
-use Eatfit\Site\Models\User;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 

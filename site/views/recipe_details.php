@@ -6,7 +6,6 @@
 use Eatfit\Site\Core\Application;
 use Eatfit\Site\Core\Form\Form;
 use Eatfit\Site\Models\Rating;
-use Eatfit\Site\Models\Recipe;
 
 $this->title = "Détails de la recette";
 $comments = $ratings->getRatingByIdRecipe()->value;
@@ -15,6 +14,7 @@ $comments = $ratings->getRatingByIdRecipe()->value;
 <div class="recipe-detail">
     <?php
     foreach ($recipe->image_paths as $image) {
+        if (str_contains($image, 'default')) $image = explode('_', $image)[1];
         ?>
         <img src="<?= Application::$API_URL . "uploads/" . $image ?>" alt="Image de la recette" class="img-fluid mb-4"
              id="recipe-image">

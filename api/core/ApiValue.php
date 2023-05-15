@@ -38,17 +38,6 @@ class ApiValue
     }
 
     /**
-     * Fonction magique __toString() - retourne l'objet ApiValue sous forme de JSON.
-     *
-     * @return string L'objet ApiValue sous forme de JSON.
-     */
-    public function __toString(): string
-    {
-        header('Content-Type: application/json; charset=UTF-8');
-        return json_encode($this);
-    }
-
-    /**
      * Fonction setCode() - définit le code HTTP de la réponse.
      *
      * @param int $code Le code HTTP à définir.
@@ -57,5 +46,16 @@ class ApiValue
     private function setCode(int $code): void
     {
         $this->code = self::STATUS_CODES[$code] !== null ? $code : 400;
+    }
+
+    /**
+     * Fonction magique __toString() - retourne l'objet ApiValue sous forme de JSON.
+     *
+     * @return string L'objet ApiValue sous forme de JSON.
+     */
+    public function __toString(): string
+    {
+        header('Content-Type: application/json; charset=UTF-8');
+        return json_encode($this);
     }
 }

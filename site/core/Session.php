@@ -7,6 +7,10 @@ class Session
 {
     protected const FLASH_KEY = 'flash_messages';
 
+    /**
+     * Constructeur de la classe Session.
+     * Initialise la session et les messages flash.
+     */
     public function __construct()
     {
         if (session_status() === PHP_SESSION_NONE) session_start();
@@ -17,6 +21,12 @@ class Session
         }
     }
 
+    /**
+     * Définit un message flash avec une clé spécifiée.
+     *
+     * @param string $key La clé du message flash
+     * @param string $message Le contenu du message flash
+     */
     public function setFlash(string $key, string $message): void
     {
         $_SESSION[self::FLASH_KEY][$key] = [
@@ -25,24 +35,46 @@ class Session
         ];
     }
 
+    /**
+     * Récupère un message flash associé à une clé spécifiée.
+     * Le message flash est ensuite supprimé de la session.
+     *
+     * @param string $key La clé du message flash
+     * @return string|null Le contenu du message flash ou null s'il n'existe pas
+     */
     public function getFlash(string $key): ?string
     {
         return $_SESSION[self::FLASH_KEY][$key]['value'] ?? null;
     }
 
-    public function set(string $key, $value): void
+    /**
+     * Définit une valeur dans la session avec une clé spécifiée.
+     *
+     * @param string $key La clé de la valeur
+     * @param mixed $value La valeur à enregistrer
+     */
+    public function set(string $key, mixed $value): void
     {
         $_SESSION[$key] = $value;
     }
 
-
+    /**
+     * Récupère une valeur de la session en utilisant la clé spécifiée.
+     *
+     * @param string $key La clé de la valeur
+     * @return mixed|null La valeur correspondante ou null si elle n'existe pas
+     */
     public function get(string $key)
     {
         return $_SESSION[$key] ?? null;
     }
 
-
-    public function remove($key)
+    /**
+     * Supprime une valeur de la session en utilisant la clé spécifiée.
+     *
+     * @param string $key La clé de la valeur à supprimer
+     */
+    public function remove(string $key): void
     {
         unset($_SESSION[$key]);
     }
@@ -52,6 +84,9 @@ class Session
         $this->removeFlashMessages();
     }
 
+    /**
+     * Supprime les messages flash de la session qui ont été marqués pour suppression.
+     */
     private function removeFlashMessages(): void
     {
         $flashMessages = $_SESSION[self::FLASH_KEY] ?? [];

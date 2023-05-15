@@ -8,6 +8,7 @@
 use Eatfit\Site\Core\Form\Form;
 use Eatfit\Site\Core\View;
 use Eatfit\Site\Models\ProfileModel;
+
 $this->title = 'Profile';
 var_dump($this);
 ?>

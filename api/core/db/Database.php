@@ -16,10 +16,10 @@ class Database
     }
 
     /**
-     * Connects to the database using the provided configuration.
+     * Établit une connexion à la base de données en utilisant la configuration fournie.
      *
-     * @param array $config The database connection configuration.
-     * @throws PDOException If an error occurs while connecting to the database.
+     * @param array $config La configuration de connexion à la base de données.
+     * @throws PDOException Si une erreur survient lors de la connexion à la base de données.
      */
     private static function connect(array $config): void
     {
@@ -50,21 +50,36 @@ class Database
         return new SqlResult($stmt);
     }
 
+    /**
+     * Récupère le dernier identifiant inséré dans la base de données.
+     *
+     * @return false|string L'identifiant inséré ou false si aucun identifiant n'est disponible.
+     */
     public static function getLastInsertId(): false|string
     {
         return self::$pdo->lastInsertId();
     }
 
+    /**
+     * Démarre une transaction.
+     */
     public function beginTransaction(): void
     {
         self::$pdo->beginTransaction();
     }
 
+
+    /**
+     * Valide une transaction.
+     */
     public function commit(): void
     {
         self::$pdo->commit();
     }
 
+    /**
+     * Annule une transaction.
+     */
     public function rollBack(): void
     {
         self::$pdo->rollBack();

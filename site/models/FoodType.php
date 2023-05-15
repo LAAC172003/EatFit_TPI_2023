@@ -9,6 +9,15 @@ class FoodType extends Model
     public int $idFoodType = 0;
     public string $name = '';
 
+    public static function getFoodTypes()
+    {
+        return self::getJsonResult([
+            'url' => 'food_types',
+            'method' => 'GET',
+            'data' => []
+        ]);
+    }
+
     public function rules(): array
     {
         return [
@@ -32,15 +41,6 @@ class FoodType extends Model
                 'name' => $this->name
             ]
         ], true);
-    }
-
-    public static function getFoodTypes()
-    {
-        return self::getJsonResult([
-            'url' => 'food_types',
-            'method' => 'GET',
-            'data' => []
-        ]);
     }
 
 }

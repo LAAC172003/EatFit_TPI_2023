@@ -4,9 +4,7 @@
 /** @var $model History */
 
 
-use Eatfit\Site\Core\Form\Form;
 use Eatfit\Site\Models\History;
-use Eatfit\Site\Models\ProfileModel;
 
 $this->title = 'Historique';
 ?>

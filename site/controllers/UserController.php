@@ -19,7 +19,11 @@ class UserController extends Controller
     }
 
     /**
-     * @throws Exception
+     * Affiche la page de profil de l'utilisateur.
+     *
+     * @param Request $request La requête HTTP.
+     * @return string Le contenu HTML de la page de profil.
+     * @throws Exception En cas d'erreur lors de la mise à jour du profil.
      */
     public function profile(Request $request): string
     {
@@ -47,23 +51,21 @@ class UserController extends Controller
         return $this->render('profile', ['model' => $profileModel, 'user' => Application::$app->user]);
     }
 
-    public function login(Request $request): string
+    /**
+     * Déconnecte l'utilisateur et le redirige vers la page d'accueil.
+     */
+    public function logout(): void
     {
-        if (!Application::isGuest()) Application::$app->response->redirect('/');
-        $loginForm = new LoginForm();
-        if ($request->getMethod() === 'post') {
-            $loginForm->loadData($request->getBody());
-            if ($loginForm->validate() && $loginForm->login()) {
-                Application::$app->session->setFlash('success', 'Vous êtes maintenant connecté');
-            }
-            Application::$app->response->redirect('/');
-        }
-
-        return $this->render('login', [
-            'model' => $loginForm
-        ]);
+        Application::$app->logout();
+        Application::$app->response->redirect('/');
     }
 
+    /**
+     * Affiche la page d'inscription.
+     *
+     * @param Request $request La requête HTTP.
+     * @return string Le contenu HTML de la page d'inscription.
+     */
     public function register(Request $request): string
     {
         if (!Application::isGuest()) Application::$app->response->redirect('/');
@@ -92,9 +94,26 @@ class UserController extends Controller
         ]);
     }
 
-    public function logout(): void
+    /**
+     * Affiche la page de connexion.
+     *
+     * @param Request $request La requête HTTP.
+     * @return string Le contenu HTML de la page de connexion.
+     */
+    public function login(Request $request): string
     {
-        Application::$app->logout();
-        Application::$app->response->redirect('/');
+        if (!Application::isGuest()) Application::$app->response->redirect('/');
+        $loginForm = new LoginForm();
+        if ($request->getMethod() === 'post') {
+            $loginForm->loadData($request->getBody());
+            if ($loginForm->validate() && $loginForm->login()) {
+                Application::$app->session->setFlash('success', 'Vous êtes maintenant connecté');
+                Application::$app->response->redirect('/');
+            }
+        }
+
+        return $this->render('login', [
+            'model' => $loginForm
+        ]);
     }
 }

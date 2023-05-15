@@ -10,6 +10,10 @@ use Exception;
 class RatingController
 {
     /**
+     * Récupère une évaluation spécifiée pour une recette spécifiée.
+     *
+     * @param Request $request La requête HTTP.
+     * @return ApiValue L'objet ApiValue contenant la réponse de l'API.
      * @throws Exception
      */
     public function read(Request $request): ApiValue
@@ -18,6 +22,10 @@ class RatingController
     }
 
     /**
+     * Crée une nouvelle évaluation pour une recette spécifiée.
+     *
+     * @param Request $request La requête HTTP.
+     * @return ApiValue L'objet ApiValue contenant la réponse de l'API.
      * @throws Exception
      */
     public function create(Request $request): ApiValue
@@ -26,6 +34,10 @@ class RatingController
     }
 
     /**
+     * Met à jour une évaluation spécifiée.
+     *
+     * @param Request $request La requête HTTP.
+     * @return ApiValue L'objet ApiValue contenant la réponse de l'API.
      * @throws Exception
      */
     public function update(Request $request): ApiValue
@@ -34,6 +46,10 @@ class RatingController
     }
 
     /**
+     * Supprime une évaluation spécifiée.
+     *
+     * @param Request $request La requête HTTP.
+     * @return ApiValue L'objet ApiValue contenant la réponse de l'API.
      * @throws Exception
      */
     public function delete(Request $request): ApiValue

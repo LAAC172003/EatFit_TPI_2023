@@ -15,41 +15,6 @@ class User extends Model
     public string $token = '';
     public int $expiration = 0;
 
-    public function rules(): array
-    {
-        return [
-            'username' => [self::RULE_REQUIRED],
-            'email' => [self::RULE_REQUIRED, self::RULE_EMAIL],
-            'password' => [self::RULE_REQUIRED, [self::RULE_MIN, 'min' => 8]],
-            'password_confirm' => [self::RULE_REQUIRED, [self::RULE_MATCH, 'match' => 'password']],
-        ];
-    }
-
-    public function labels(): array
-    {
-        return [
-            'username' => 'Username: ',
-            'email' => 'Email: ',
-            'password' => 'Password: ',
-            'password_confirm' => 'Password Confirm:'
-        ];
-    }
-
-
-    public function save()
-    {
-        return self::getJsonResult([
-            'url' => 'user',
-            'method' => 'POST',
-            'data' => [
-                'username' => $this->username,
-                'email' => $this->email,
-                'password' => $this->password,
-                'confirm_password' => $this->password_confirm
-            ]
-        ]);
-    }
-
     public static function getUser($email, $password)
     {
         return self::getJsonResult([
@@ -82,5 +47,39 @@ class User extends Model
         $response = curl_exec($curl);
         curl_close($curl);
         return json_decode($response);
+    }
+
+    public function rules(): array
+    {
+        return [
+            'username' => [self::RULE_REQUIRED],
+            'email' => [self::RULE_REQUIRED, self::RULE_EMAIL],
+            'password' => [self::RULE_REQUIRED, [self::RULE_MIN, 'min' => 8]],
+            'password_confirm' => [self::RULE_REQUIRED, [self::RULE_MATCH, 'match' => 'password']],
+        ];
+    }
+
+    public function labels(): array
+    {
+        return [
+            'username' => 'Username: ',
+            'email' => 'Email: ',
+            'password' => 'Password: ',
+            'password_confirm' => 'Password Confirm:'
+        ];
+    }
+
+    public function save()
+    {
+        return self::getJsonResult([
+            'url' => 'user',
+            'method' => 'POST',
+            'data' => [
+                'username' => $this->username,
+                'email' => $this->email,
+                'password' => $this->password,
+                'confirm_password' => $this->password_confirm
+            ]
+        ]);
     }
 }

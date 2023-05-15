@@ -20,43 +20,13 @@ class RecipeController extends Controller
         $this->registerMiddleware(new AuthMiddleware(['create', 'detail', 'update', 'delete', 'deleteRating', 'addFoodType', 'updateRating']));
     }
 
-    public function create(Request $request): string
-    {
-        $model = new Recipe();
-        if (Application::$app->request->isPost()) {
-            $model->image = $_FILES;
-            $model->idUser = Application::$app->user->idUser;
-            if (!isset($_POST['foodtype']) || !isset($_POST['percentage'])) Application::$app->session->setFlash('error', 'Veuillez sélectionner au moins un type de nourriture');
-            else {
-                $foodTypes = $_POST['foodtype'];
-                $percentages = $_POST['percentage'];
-                $totalPercentage = array_sum($percentages);
-                if ($totalPercentage != 100) {
-                    Application::$app->session->setFlash('error', 'La somme des pourcentages doit être de 100');
-                    return $this->render('add_recipe', ['model' => $model]);
-                }
-                if (count($foodTypes) !== count(array_unique($foodTypes))) {
-                    Application::$app->session->setFlash('error', 'Les types de nourriture ne peuvent pas se répéter');
-                    return $this->render('add_recipe', ['model' => $model]);
-                }
-                foreach ($foodTypes as $key => $value) {
-                    $model->foodType[] = [$value, $percentages[$key]];
-                }
-
-                $data = $request->getBody();
-                $data = array_merge($data, [['image' => $model->image], ['idUser' => $model->idUser]], [['food_type' => $model->foodType]]);
-                $model->loadData($data);
-                if ($model->validate() && $model->create()) {
-                    Application::$app->session->setFlash('success', 'Recipe added');
-                    Application::$app->response->redirect('/');
-                }
-            }
-        }
-        return $this->render('add_recipe', ['model' => $model]);
-    }
-
-
-    public function detail(Request $request)
+    /**
+     * Affiche les détails d'une recette.
+     *
+     * @param Request $request La requête HTTP.
+     * @return string Le contenu HTML de la page de détails de recette.
+     */
+    public function detail(Request $request): string
     {
         $ratings = new Rating();
         $model = new Recipe();
@@ -90,6 +60,122 @@ class RecipeController extends Controller
     }
 
     /**
+     * Crée une nouvelle recette.
+     *
+     * @param Request $request La requête HTTP.
+     * @return string Le contenu HTML de la page de création de recette.
+     */
+    public function create(Request $request): string
+    {
+        $model = new Recipe();
+        if (Application::$app->request->isPost()) {
+            $model->image = $_FILES;
+            $model->idUser = Application::$app->user->idUser;
+            if (!isset($_POST['foodtype']) || !isset($_POST['percentage'])) Application::$app->session->setFlash('error', 'Veuillez sélectionner au moins un type de nourriture');
+            else {
+                $foodTypes = $_POST['foodtype'];
+                $percentages = $_POST['percentage'];
+                $totalPercentage = array_sum($percentages);
+                if ($totalPercentage != 100) {
+                    Application::$app->session->setFlash('error', 'La somme des pourcentages doit être de 100');
+                    return $this->render('add_recipe', ['model' => $model]);
+                }
+                if (count($foodTypes) !== count(array_unique($foodTypes))) {
+                    Application::$app->session->setFlash('error', 'Les types de nourriture ne peuvent pas se répéter');
+                    return $this->render('add_recipe', ['model' => $model]);
+                }
+                foreach ($foodTypes as $key => $value) {
+                    $model->foodType[] = [$value, $percentages[$key]];
+                }
+
+                $data = $request->getBody();
+                $data = array_merge($data, [['image' => $model->image], ['idUser' => $model->idUser]], [['food_type' => $model->foodType]]);
+                $model->categories = [$data['categories']];
+                $model->loadData($data);
+
+                if ($model->validate()) {
+                    $apiResponse = $model->create();
+//                    Application::$app->session->setFlash('success', 'Recipe added');
+//                    Application::$app->response->redirect('/');
+                }
+            }
+        }
+        return $this->render('add_recipe', ['model' => $model]);
+    }
+
+    /**
+     * Supprime une évaluation d'une recette.
+     *
+     * @param Request $request La requête HTTP.
+     * @throws ForbiddenException
+     */
+    public function deleteRating(Request $request): void
+    {
+        $idRating = $request->getRouteParams()['idRating'];
+        $model = new Rating();
+        $model->idRating = $idRating;
+        $rating = $model->getRatingById();
+        $model->idRecipe = $rating->value[0]->idRecipe;
+        if ($rating->value[0]->idUser != Application::$app->user->idUser) throw new ForbiddenException();
+        $apiResponse = $model->delete();
+        Application::$app->session->setFlash('success', $apiResponse->value);
+        Application::$app->response->redirect('/recipe/detail/' . $model->idRecipe);
+    }
+
+    /**
+     * Supprime une recette.
+     *
+     * @param Request $request La requête HTTP.
+     * @throws ForbiddenException
+     * @throws NotFoundException
+     */
+    public function delete(Request $request): void
+    {
+        $model = new Recipe();
+        $model->idRecipe = $request->getRouteParams()['idRecipe'];
+        $recipe = $model->getRecipe("idRecipe", $request->getRouteParams()['idRecipe']);
+        $model->idUser = $recipe->value->creator_id;
+        if (!$recipe) throw new NotFoundException();
+        if (Application::$app->user->idUser != $model->idUser) throw new ForbiddenException();
+        $model->delete();
+        Application::$app->session->setFlash('success', 'La recette a été supprimée');
+        Application::$app->response->redirect('/');
+    }
+
+    /**
+     * Met à jour une évaluation d'une recette.
+     *
+     * @param Request $request La requête HTTP.
+     * @return string Le contenu HTML de la page de modification d'évaluation.
+     * @throws ForbiddenException
+     */
+    public function updateRating(Request $request)
+    {
+        $idRating = $request->getRouteParams()['idRating'];
+        $model = new Rating();
+        $model->idRating = $idRating;
+        $test = $model->getRatingById();
+
+        $model->idRecipe = $test->value[0]->idRecipe;
+        $model->score = $test->value[0]->score;
+        $model->comment = $test->value[0]->comment;
+        if ($test->value[0]->idUser != Application::$app->user->idUser) throw new ForbiddenException();
+        if ($request->isPost()) {
+            if (isset($_POST['score'])) $model->score = $_POST['score'];
+            if (isset($_POST['comment'])) $model->comment = $_POST['comment'];
+            $apiResponse = $model->update();
+            if ($apiResponse->value == null) Application::$app->session->setFlash('error', $apiResponse->message);
+            else Application::$app->session->setFlash('success', "Votre évaluation a été modifiée");
+            Application::$app->response->redirect('/recipe/detail/' . $model->idRecipe);
+        }
+        return $this->render('edit_rating', ['model' => $model]);
+    }
+
+    /**
+     * Met à jour une recette existante.
+     *
+     * @param Request $request La requête HTTP.
+     * @return string Le contenu HTML de la page de modification de recette.
      * @throws ForbiddenException
      */
     public function update(Request $request): string
@@ -127,63 +213,11 @@ class RecipeController extends Controller
     }
 
     /**
-     * @throws ForbiddenException
-     * @throws NotFoundException
+     * Ajoute un nouveau type de nourriture.
+     *
+     * @param Request $request La requête HTTP.
+     * @return string Le contenu HTML de la page d'ajout de type de nourriture.
      */
-    public function delete(Request $request): void
-    {
-        $model = new Recipe();
-        $model->idRecipe = $request->getRouteParams()['idRecipe'];
-        $recipe = $model->getRecipe("idRecipe", $request->getRouteParams()['idRecipe']);
-        $model->idUser = $recipe->value->creator_id;
-        if (!$recipe) throw new NotFoundException();
-        if (Application::$app->user->idUser != $model->idUser) throw new ForbiddenException();
-        $model->delete();
-        Application::$app->session->setFlash('success', 'La recette a été supprimée');
-        Application::$app->response->redirect('/');
-    }
-
-    /**
-     * @throws ForbiddenException
-     */
-    public function deleteRating(Request $request)
-    {
-        $idRating = $request->getRouteParams()['idRating'];
-        $model = new Rating();
-        $model->idRating = $idRating;
-        $rating = $model->getRatingById();
-        $model->idRecipe = $rating->value[0]->idRecipe;
-        if ($rating->value[0]->idUser != Application::$app->user->idUser) throw new ForbiddenException();
-        $apiResponse = $model->delete();
-        Application::$app->session->setFlash('success', $apiResponse->value);
-        Application::$app->response->redirect('/recipe/detail/' . $model->idRecipe);
-    }
-
-    /**
-     * @throws ForbiddenException
-     */
-    public function updateRating(Request $request)
-    {
-        $idRating = $request->getRouteParams()['idRating'];
-        $model = new Rating();
-        $model->idRating = $idRating;
-        $test = $model->getRatingById();
-
-        $model->idRecipe = $test->value[0]->idRecipe;
-        $model->score = $test->value[0]->score;
-        $model->comment = $test->value[0]->comment;
-        if ($test->value[0]->idUser != Application::$app->user->idUser) throw new ForbiddenException();
-        if ($request->isPost()) {
-            if (isset($_POST['score'])) $model->score = $_POST['score'];
-            if (isset($_POST['comment'])) $model->comment = $_POST['comment'];
-            $apiResponse = $model->update();
-            if ($apiResponse->value == null) Application::$app->session->setFlash('error', $apiResponse->message);
-            else Application::$app->session->setFlash('success', "Votre évaluation a été modifiée");
-            Application::$app->response->redirect('/recipe/detail/' . $model->idRecipe);
-        }
-        return $this->render('edit_rating', ['model' => $model]);
-    }
-
     public function addFoodType(Request $request)
     {
         $model = new FoodType();

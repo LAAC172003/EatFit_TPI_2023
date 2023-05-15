@@ -6,9 +6,7 @@ namespace Eatfit\Api\Models;
 use Eatfit\Api\Core\Application;
 use Eatfit\Api\Core\Db\SqlResult;
 use Eatfit\Api\Core\Model;
-
 use Exception;
-use http\Exception\BadQueryStringException;
 
 class User extends Model
 {
@@ -25,15 +23,25 @@ class User extends Model
     }
 
     /**
-     * Récupère les informations d'un utilisateur à partir du jeton d'authentification.
+     * Vérifie si un utilisateur existe dans la base de données.
      *
-     * @param bool $expiration Vérifie l'expiration du jeton si true.
-     * @return array|null Les informations de l'utilisateur, ou null si l'utilisateur n'est pas trouvé.
-     * @throws Exception Si le jeton est invalide.
+     * @param $email
+     * @param string $password
+     * @return array|Exception Les informations de l'utilisateur si l'utilisateur existe, une exception sinon.
+     * @throws Exception
      */
-    public static function getUserByToken(bool $expiration = true): ?array
+    private static function getUserInfo($email, string $password): array|Exception
     {
-        return parent::getUserByToken($expiration);
+        $user = Application::$app->db->execute("SELECT * FROM users WHERE email = :email", [":email" => $email]);
+
+        if ($user->isEmpty()) throw new Exception("Utilisateur ou mot de passe invalide", 400);
+        $user = $user->getFirstRow();
+        if (password_verify($password, $user['password'])) {
+            unset($user['password']);
+            if ($user['expiration'] < time()) $user['expiration'] = 'expiré';
+            return $user;
+        }
+        throw new Exception("Utilisateur ou mot de passe invalide", 400);
     }
 
     /**
@@ -64,6 +72,35 @@ class User extends Model
             throw new Exception("Erreur lors de la création de l'utilisateur", 500);
         }
         return self::getUser($data['email'], $data['username'])->getFirstRow();
+    }
+
+    /**
+     * Récupère les informations d'un utilisateur à partir de son adresse e-mail.
+     *
+     * @param string|null $email L'adresse e-mail de l'utilisateur.
+     * @param string|null $username
+     * @return SqlResult Les informations de l'utilisateur.
+     * @throws Exception
+     */
+    public static function getUser(string $email = null, string $username = null): SqlResult
+    {
+        $query = "SELECT * FROM users ";
+        $params = [];
+        if ($email != null && $username == null) {
+            $query .= " WHERE email = :email";
+            $params = [":email" => $email];
+        } elseif ($username != null && $email == null) {
+            $query .= " WHERE username = :username";
+            $params = [":username" => $username];
+        } else {
+            $query .= "WHERE email = :email OR username = :username";
+            $params = [":email" => $email, ":username" => $username];
+        }
+        try {
+            return Application::$app->db->execute($query, $params);
+        } catch (Exception $e) {
+            throw new Exception("Un problème est survenu", 500);
+        }
     }
 
     /**
@@ -114,6 +151,17 @@ class User extends Model
         return $sb;
     }
 
+    /**
+     * Récupère les informations d'un utilisateur à partir du jeton d'authentification.
+     *
+     * @param bool $expiration Vérifie l'expiration du jeton si true.
+     * @return array|null Les informations de l'utilisateur, ou null si l'utilisateur n'est pas trouvé.
+     * @throws Exception Si le jeton est invalide.
+     */
+    public static function getUserByToken(bool $expiration = true): ?array
+    {
+        return parent::getUserByToken($expiration);
+    }
 
     /**
      * Supprime un utilisateur existant dans la base de données.
@@ -130,28 +178,6 @@ class User extends Model
             throw new Exception("Erreur lors de la suppression de l'utilisateur", 500);
         }
         return "Utilisateur supprimé avec succès";
-    }
-
-    /**
-     * Vérifie si un utilisateur existe dans la base de données.
-     *
-     * @param $email
-     * @param string $password
-     * @return array|Exception Les informations de l'utilisateur si l'utilisateur existe, une exception sinon.
-     * @throws Exception
-     */
-    private static function getUserInfo($email, string $password): array|Exception
-    {
-        $user = Application::$app->db->execute("SELECT * FROM users WHERE email = :email", [":email" => $email]);
-
-        if ($user->isEmpty()) throw new Exception("Utilisateur ou mot de passe invalide", 400);
-        $user = $user->getFirstRow();
-        if (password_verify($password, $user['password'])) {
-            unset($user['password']);
-            if ($user['expiration'] < time()) $user['expiration'] = 'expiré';
-            return $user;
-        }
-        throw new Exception("Utilisateur ou mot de passe invalide", 400);
     }
 
     /**
@@ -178,46 +204,5 @@ class User extends Model
         }
         unset($user['password']);
         return $user;
-    }
-
-    /**
-     * Récupère les informations d'un utilisateur à partir de son adresse e-mail.
-     *
-     * @param string $email L'adresse e-mail de l'utilisateur.
-     * @return SqlResult Les informations de l'utilisateur.
-     * @throws Exception
-     */
-    public static function getUser(string $email = null, string $username = null): SqlResult
-    {
-        $query = "SELECT * FROM users ";
-        $params = [];
-        if ($email != null && $username == null) {
-            $query .= " WHERE email = :email";
-            $params = [":email" => $email];
-        } elseif ($username != null && $email == null) {
-            $query .= " WHERE username = :username";
-            $params = [":username" => $username];
-        } else {
-            $query .= "WHERE email = :email OR username = :username";
-            $params = [":email" => $email, ":username" => $username];
-        }
-        try {
-            return Application::$app->db->execute($query, $params);
-        } catch (Exception $e) {
-            throw new Exception("Un problème est survenu", 500);
-        }
-    }
-
-    public static function getUserByEmail($email)
-    {
-        try {
-            return Application::$app->db->execute(
-                "SELECT * FROM users WHERE email = :email",
-                [
-                    ":email" => $email
-                ]);
-        } catch (Exception $e) {
-            throw new Exception("Un problème est survenu", 500);
-        }
     }
 }

@@ -13,10 +13,14 @@ class SiteController extends Controller
         $this->registerMiddleware(new AuthMiddleware(['profile']));
     }
 
+    /**
+     * Affiche la page d'accueil.
+     *
+     * @return string Le contenu HTML de la page d'accueil.
+     */
     public function home(): string
     {
         $recipeModel = new Recipe();
-//        var_dump($recipeModel->getRecipeByFilter("category", "Déjeuner"));
         return $this->render('home', [
             'name' => 'Lucas Almeida Costa', 'model' => $recipeModel
         ]);

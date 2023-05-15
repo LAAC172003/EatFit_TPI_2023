@@ -7,7 +7,6 @@ use Eatfit\Api\Core\Application;
 use Eatfit\Api\Core\Db\SqlResult;
 use Eatfit\Api\Core\Model;
 use Exception;
-use http\Exception\BadQueryStringException;
 
 class Recipe extends Model
 {
@@ -45,6 +44,85 @@ class Recipe extends Model
         }
         if ($recipe->isEmpty()) throw new Exception("Recette non trouvée", 404);
         return $recipe->getValues();
+    }
+
+    /**
+     * Récupère une recette par son ID.
+     *
+     * @param int $idRecipe L'ID de la recette
+     * @return array|null Les données de la recette ou null si non trouvée
+     * @throws Exception En cas d'erreur
+     */
+    public static function getRecipeById(int $idRecipe): ?array
+    {
+        $query = "SELECT * FROM recipes_details WHERE recipe_id = :idRecipe";
+        $statement = Application::$app->db->execute($query, [":idRecipe" => $idRecipe]);
+        return $statement->isEmpty() ? null : $statement->getFirstRow();
+    }
+
+    /**
+     *
+     * Filtre les recettes par catégorie ou type d'aliment.
+     * @param null|string $category La catégorie de recettes à filtrer
+     * @param null|string $foodType Le type d'aliment à filtrer
+     * @return SqlResult Les résultats du filtrage
+     * @throws Exception En cas d'erreur
+     */
+    public static function filter($category = null, $foodType = null): SqlResult
+    {
+        $sql = "SELECT recipes_details.* FROM recipes_details ";
+        $where = [];
+        $params = [];
+        if ($category !== null) {
+            $where[] = 'FIND_IN_SET(:category, recipes_details.categories) > 0';
+            $params[':category'] = $category;
+        }
+        if ($foodType !== null) {
+            $where[] = 'FIND_IN_SET(:foodType, recipes_details.foodtypes_with_percentages) > 0';
+            $params[':foodType'] = $foodType;
+        }
+        if (!empty($where)) {
+            $sql .= 'WHERE ' . implode(' AND ', $where) . ' ';
+        }
+        try {
+            return Application::$app->db->execute($sql, $params);
+        } catch (Exception $e) {
+            var_dump($e);
+            throw new Exception("Erreur lors du filtrage des recettes", 500);
+        }
+    }
+
+    /**
+     * Récupère toutes les recettes.
+     *
+     * @return array Les recettes
+     * @throws Exception En cas d'erreur ou si aucune recette n'est trouvée
+     */
+    private static function getAllRecipes(): array
+    {
+        $statement = Application::$app->db->execute("SELECT * FROM recipes_details");
+        if ($statement->isEmpty()) throw new Exception("No recipes found", 404);
+        return $statement->getValues();
+    }
+
+    /**
+     * Recherche des recettes en fonction des filtres fournis.
+     *
+     * @param string $search La valeur de recherche
+     * @return SqlResult Les résultats de la recherche
+     * @throws Exception En cas d'erreur
+     */
+    private static function search(string $search): SqlResult
+    {
+        $date = DateTime::createFromFormat('Y-m-d', $search);
+        $isDate = $date && $date->format('Y-m-d') === $search;
+        $searchForText = "%{$search}%";
+        $searchForDate = $isDate ? $search : '';
+        $sql = "SELECT recipes_details.* FROM recipes_details 
+            WHERE recipes_details.recipe_title LIKE :searchText 
+            OR recipes_details.categories LIKE :searchText 
+            OR DATE_FORMAT(recipes_details.created_at, '%Y-%m-%d') = :searchDate";
+        return Application::$app->db->execute($sql, [':searchText' => $searchForText, ':searchDate' => $searchForDate]);
     }
 
     /**
@@ -109,6 +187,20 @@ class Recipe extends Model
             if (!in_array($food_type[0], $food_types)) throw new Exception("Type d'aliment invalide : '$food_type[0]'. Les types d'aliments autorisés sont : " . implode(", ", $food_types), 400);
         }
         if ($percentage != 100) throw new Exception("La somme des pourcentages doit être égale à 100", 400);
+    }
+
+    /**
+     * Récupère une recette par son titre.
+     *
+     * @param string $title Le titre de la recette
+     * @return SqlResult Les résultats de la requête
+     * @throws Exception En cas d'erreur
+     */
+    private
+    static function getRecipe(string $title): SqlResult
+    {
+        $query = "SELECT * FROM recipes WHERE title = :title";
+        return Application::$app->db->execute($query, [":title" => $title]);
     }
 
     /**
@@ -192,11 +284,11 @@ class Recipe extends Model
         } else {
             foreach ($data['image'] as $images) {
                 $image = explode(",", $images);
-                file_put_contents(Application::$UPLOAD_PATH . trim($image[0]), base64_decode(trim($image[1])));
-                Application::$app->db->execute(
-                    "SELECT insert_unique_image_name(:path, (SELECT idRecipe FROM recipes WHERE title = :title));",
+                $imageSql = Application::$app->db->execute(
+                    "SELECT insert_unique_image_name(:path, (SELECT idRecipe FROM recipes WHERE title = :title)) as path;",
                     [":path" => trim($image[0]), ":title" => $data['title']]
                 );
+                file_put_contents(Application::$UPLOAD_PATH . $imageSql->getFirstRow()['path'], base64_decode(trim($image[1])));
             }
         }
     }
@@ -249,110 +341,18 @@ class Recipe extends Model
         if ($recipe['creator_id'] != self::getUserByToken()['idUser']) throw new Exception("Non autorisé", 401);
         try {
             //Call procedure
-            Application::$app->db->execute("DELETE FROM recipes WHERE idRecipe= :idRecipe", [":idRecipe" => $data['idRecipe']]);
+            $delete = Application::$app->db->execute("CALL delete_recipe(:idRecipe)", [":idRecipe" => $data['idRecipe']]);
+            if ($delete->isEmpty()) throw new Exception("Erreur lors de la suppression de la recette", 500);
+            foreach ($delete->getValues() as $key => $value) {
+                if (str_contains($value["CONCAT(idImage, '_', path)"], "default")) continue;
+                unlink(Application::$UPLOAD_PATH . $value["CONCAT(idImage, '_', path)"]);
+            }
         } catch (Exception $e) {
             throw new Exception("Erreur lors de la suppression de la recette", 500);
         }
         // Retournez un message de succès
         return "Recette supprimée avec succès";
     }
-
-    /**
-     * Récupère une recette par son titre.
-     *
-     * @param string $title Le titre de la recette
-     * @return SqlResult Les résultats de la requête
-     * @throws Exception En cas d'erreur
-     */
-    private
-    static function getRecipe(string $title): SqlResult
-    {
-        $query = "SELECT * FROM recipes WHERE title = :title";
-        return Application::$app->db->execute($query, [":title" => $title]);
-    }
-
-    /**
-     * Récupère toutes les recettes.
-     *
-     * @return array Les recettes
-     * @throws Exception En cas d'erreur ou si aucune recette n'est trouvée
-     */
-    private static function getAllRecipes(): array
-    {
-        $statement = Application::$app->db->execute("SELECT * FROM recipes_details");
-        if ($statement->isEmpty()) throw new Exception("No recipes found", 404);
-        return $statement->getValues();
-    }
-
-
-    /**
-     * Recherche des recettes en fonction des filtres fournis.
-     *
-     * @param string $search La valeur de recherche
-     * @return SqlResult Les résultats de la recherche
-     * @throws Exception En cas d'erreur
-     */
-    private static function search(string $search): SqlResult
-    {
-        $date = DateTime::createFromFormat('Y-m-d', $search);
-        $isDate = $date && $date->format('Y-m-d') === $search;
-        $searchForText = "%{$search}%";
-        $searchForDate = $isDate ? $search : '';
-        $sql = "SELECT recipes_details.* FROM recipes_details 
-            WHERE recipes_details.recipe_title LIKE :searchText 
-            OR recipes_details.categories LIKE :searchText 
-            OR DATE_FORMAT(recipes_details.created_at, '%Y-%m-%d') = :searchDate";
-        return Application::$app->db->execute($sql, [':searchText' => $searchForText, ':searchDate' => $searchForDate]);
-    }
-
-
-    /**
-     *
-     * Filtre les recettes par catégorie ou type d'aliment.
-     * @param null|string $category La catégorie de recettes à filtrer
-     * @param null|string $foodType Le type d'aliment à filtrer
-     * @return SqlResult Les résultats du filtrage
-     * @throws Exception En cas d'erreur
-     */
-    public static function filter($category = null, $foodType = null): SqlResult
-    {
-        $sql = "SELECT recipes_details.* FROM recipes_details ";
-        $where = [];
-        $params = [];
-        if ($category !== null) {
-            $where[] = 'FIND_IN_SET(:category, recipes_details.categories) > 0';
-            $params[':category'] = $category;
-        }
-        if ($foodType !== null) {
-            $where[] = 'FIND_IN_SET(:foodType, recipes_details.foodtypes_with_percentages) > 0';
-            $params[':foodType'] = $foodType;
-        }
-        if (!empty($where)) {
-            $sql .= 'WHERE ' . implode(' AND ', $where) . ' ';
-        }
-        try {
-            return Application::$app->db->execute($sql, $params);
-        } catch (Exception $e) {
-            var_dump($e);
-            throw new Exception("Erreur lors du filtrage des recettes", 500);
-        }
-    }
-
-
-    /**
-     * Récupère une recette par son ID.
-     *
-     * @param int $idRecipe L'ID de la recette
-     * @return array|null Les données de la recette ou null si non trouvée
-     * @throws Exception En cas d'erreur
-     */
-    public static function getRecipeById(int $idRecipe): ?array
-    {
-        $query = "SELECT * FROM recipes_details WHERE recipe_id = :idRecipe";
-        $statement = Application::$app->db->execute($query, [":idRecipe" => $idRecipe]);
-        return $statement->isEmpty() ? null : $statement->getFirstRow();
-    }
-
 
     /**
      * Ajoute un type d'aliment.
@@ -391,7 +391,7 @@ class Recipe extends Model
      * @return array|null Les types d'aliments ou null si non trouvés
      * @throws Exception En cas d'erreur
      */
-    public static function getFoodTypes()
+    public static function getFoodTypes(): ?array
     {
         $query = "SELECT * FROM food_types";
         $statement = Application::$app->db->execute($query);

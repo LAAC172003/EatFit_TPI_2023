@@ -1,6 +1,9 @@
 <?php
-/** @var $exception \Exception */
-\Eatfit\Site\Core\Application::$app->response->statusCode($exception->getCode());
+/** @var $exception Exception */
+
+use Eatfit\Site\Core\Application;
+
+Application::$app->response->statusCode($exception->getCode());
 $this->title = $exception->getCode();
 ?>
 <main class="error-container">

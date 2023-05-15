@@ -2,7 +2,7 @@
 
 namespace Eatfit\Site\Core\Form;
 
-use  Eatfit\Site\Core\Model;
+use Eatfit\Site\Core\Model;
 
 abstract class BaseField
 {
@@ -12,10 +12,10 @@ abstract class BaseField
     protected string $placeholder = '';
 
     /**
-     * Field constructor.
+     * Constructeur de la classe BaseField.
      *
-     * @param Model $model
-     * @param string $attribute
+     * @param Model $model Le modèle associé au champ.
+     * @param string $attribute L'attribut du modèle correspondant au champ.
      */
     public function __construct(Model $model, string $attribute)
     {
@@ -23,6 +23,11 @@ abstract class BaseField
         $this->attribute = $attribute;
     }
 
+    /**
+     * Méthode magique __toString() - renvoie le champ sous forme de chaîne de caractères.
+     *
+     * @return string Le champ HTML rendu.
+     */
     public function __toString(): string
     {
         return sprintf('<div class="form-label label-dark">
@@ -34,16 +39,28 @@ abstract class BaseField
         </div>', $this->model->getLabel($this->attribute), $this->renderInput(), $this->getErrorMessage());
     }
 
+    /**
+     * Méthode abstraite renderInput() - rendu de l'élément de champ.
+     *
+     * @return string Le rendu de l'élément de champ spécifique.
+     */
     abstract protected function renderInput(): string;
 
+    /**
+     * Obtient le message d'erreur associé au champ.
+     *
+     * @return string Le message d'erreur du champ.
+     */
     protected function getErrorMessage(): string
     {
         return $this->model->getFirstError($this->attribute);
     }
 
     /**
-     * @param string $type
-     * @return BaseField
+     * Définit le type du champ.
+     *
+     * @param string $type Le type du champ.
+     * @return BaseField L'instance de BaseField.
      */
     public function setType(string $type): self
     {

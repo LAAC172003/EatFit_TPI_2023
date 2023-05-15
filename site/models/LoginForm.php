@@ -5,7 +5,6 @@ namespace Eatfit\Site\Models;
 
 use Eatfit\Site\Core\Application;
 use Eatfit\Site\Core\Model;
-use Eatfit\Site\Core\Response;
 
 class LoginForm extends Model
 {
@@ -20,7 +19,7 @@ class LoginForm extends Model
         ];
     }
 
-    public function labels()
+    public function labels(): array
     {
         return [
             'email' => 'Email:',

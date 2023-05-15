@@ -37,6 +37,16 @@ class Request
     }
 
     /**
+     * Récupère tous les paramètres de la route associée à la requête.
+     *
+     * @return array Les paramètres de la route.
+     */
+    public function getRouteParams(): array
+    {
+        return $this->routeParams;
+    }
+
+    /**
      * Définit les paramètres de la route associée à la requête.
      *
      * @param array $params Les paramètres de la route.
@@ -49,16 +59,6 @@ class Request
     }
 
     /**
-     * Récupère tous les paramètres de la route associée à la requête.
-     *
-     * @return array Les paramètres de la route.
-     */
-    public function getRouteParams(): array
-    {
-        return $this->routeParams;
-    }
-
-    /**
      * Récupère la valeur d'un paramètre de la route associée à la requête.
      *
      * @param string $param Le nom du paramètre de la route.
@@ -68,16 +68,6 @@ class Request
     public function getRouteParam(string $param, mixed $default = null): mixed
     {
         return $this->routeParams[$param] ?? $default;
-    }
-
-    /**
-     * Récupère le corps de la requête HTTP.
-     *
-     * @return mixed Le corps de la requête HTTP.
-     */
-    private function getBody(): mixed
-    {
-        return json_decode(file_get_contents('php://input'), true);
     }
 
     /**
@@ -97,6 +87,16 @@ class Request
         if (!is_array($body)) throw new Exception("Corps de la requête invalide", 400);
         $this->validateData($body, $requiredFields, $requireAllFields);
         return $body;
+    }
+
+    /**
+     * Récupère le corps de la requête HTTP.
+     *
+     * @return mixed Le corps de la requête HTTP.
+     */
+    private function getBody(): mixed
+    {
+        return json_decode(file_get_contents('php://input'), true);
     }
 
     /**

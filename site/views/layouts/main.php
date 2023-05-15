@@ -1,7 +1,8 @@
 <?php
-/** @var $this \Eatfit\Site\Core\View */
+/** @var $this View */
 
 use Eatfit\Site\Core\Application;
+use Eatfit\Site\Core\View;
 
 ?>
 <!DOCTYPE html>

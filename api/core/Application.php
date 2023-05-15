@@ -33,18 +33,6 @@ class Application
     }
 
     /**
-     * Établit la connexion à la base de données.
-     *
-     * @throws Exception
-     */
-    private function connectToDatabase(): void
-    {
-        if (!isset($this->db)) {
-            $this->db = new Database($this->config['db']);
-        }
-    }
-
-    /**
      * Lance l'application.
      * Résout la requête et renvoie la réponse correspondante.
      * En cas d'exception, renvoie une réponse d'erreur.
@@ -61,6 +49,18 @@ class Application
             echo $this->router->resolve();
         } catch (Exception $e) {
             echo new ApiValue(null, $e->getCode(), $e->getMessage());
+        }
+    }
+
+    /**
+     * Établit la connexion à la base de données.
+     *
+     * @throws Exception
+     */
+    private function connectToDatabase(): void
+    {
+        if (!isset($this->db)) {
+            $this->db = new Database($this->config['db']);
         }
     }
 }

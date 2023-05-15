@@ -9,13 +9,20 @@ class AuthMiddleware extends BaseMiddleware
 {
     protected array $actions = [];
 
+    /**
+     * AuthMiddleware constructor.
+     *
+     * @param array $actions Les actions qui nécessitent une authentification.
+     */
     public function __construct($actions = [])
     {
         $this->actions = $actions;
     }
 
     /**
-     * @throws ForbiddenException
+     * Exécute le middleware.
+     *
+     * @throws ForbiddenException Si l'utilisateur n'est pas authentifié.
      */
     public function execute(): void
     {

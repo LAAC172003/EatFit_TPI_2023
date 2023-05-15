@@ -19,11 +19,6 @@ class Rating extends Model
         ];
     }
 
-    public function attributes(): array
-    {
-        return ['idRating', 'score', 'comment'];
-    }
-
     public function labels(): array
     {
         return [
@@ -80,6 +75,11 @@ class Rating extends Model
             'method' => 'PUT',
             'data' => $updates
         ], true);
+    }
+
+    public function attributes(): array
+    {
+        return ['idRating', 'score', 'comment'];
     }
 
     public function delete()

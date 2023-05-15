@@ -6,14 +6,14 @@ use Eatfit\Api\Core\Application;
 use Eatfit\Api\Core\Db\SqlResult;
 use Eatfit\Api\Core\Model;
 use Exception;
-use http\Encoding\Stream\Inflate;
 
 class Rating extends Model
 {
     /**
-     * Méthode pour lire toutes les évaluations de la base de données.
+     * Lit toutes les évaluations de la base de données pour une recette spécifiée.
      *
-     * @return array La liste de toutes les évaluations.
+     * @param array $data Les données de la requête.
+     * @return array La liste de toutes les évaluations pour la recette spécifiée.
      * @throws Exception Si une erreur se produit lors de l'exécution de la requête.
      */
     public static function read($data): array
@@ -33,10 +33,22 @@ class Rating extends Model
     }
 
     /**
-     * Méthode pour créer une nouvelle évaluation.
+     * Méthode pour obtenir une évaluation spécifique par son identifiant.
+     *
+     * @param $idRating L'identifiant de l'évaluation à obtenir.
+     * @return SqlResult Le résultat de la requête SQL.
+     * @throws Exception Si une erreur se produit lors de l'exécution de la requête.
+     */
+    public static function getRatingById($idRating): SqlResult
+    {
+        return Application::$app->db->execute("SELECT * FROM ratings WHERE idRating = :idRating", [":idRating" => $idRating]);
+    }
+
+    /**
+     * Crée une nouvelle évaluation pour une recette spécifiée.
      *
      * @param array $data Les données de l'évaluation à créer.
-     * @return array L'évaluation créée.
+     * @return array Les informations sur l'évaluation créée.
      * @throws Exception Si une erreur se produit lors de la validation des données ou de l'exécution de la requête.
      */
     public static function create(array $data): array
@@ -119,18 +131,6 @@ class Rating extends Model
             throw new Exception("Erreur lors de la suppression de l'évaluation", 500);
         }
         return "Évaluation supprimée avec succès";
-    }
-
-    /**
-     * Méthode pour obtenir une évaluation spécifique par son identifiant.
-     *
-     * @param $idRating L'identifiant de l'évaluation à obtenir.
-     * @return SqlResult Le résultat de la requête SQL.
-     * @throws Exception Si une erreur se produit lors de l'exécution de la requête.
-     */
-    public static function getRatingById($idRating): SqlResult
-    {
-        return Application::$app->db->execute("SELECT * FROM ratings WHERE idRating = :idRating", [":idRating" => $idRating]);
     }
 }
 
