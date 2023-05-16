@@ -1,26 +1,57 @@
 <?php
 /** @var $recipe */
-
 /** @var $ratings Rating */
+
+/** @var $this View */
 
 use Eatfit\Site\Core\Application;
 use Eatfit\Site\Core\Form\Form;
+use Eatfit\Site\Core\View;
 use Eatfit\Site\Models\Rating;
 
 $this->title = "Détails de la recette";
+
 $comments = $ratings->getRatingByIdRecipe()->value;
 ?>
 
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="/css/style.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
 <div class="recipe-detail">
-    <?php
-    foreach ($recipe->image_paths as $image) {
-        if (str_contains($image, 'default')) $image = explode('_', $image)[1];
-        ?>
-        <img src="<?= Application::$API_URL . "uploads/" . $image ?>" alt="Image de la recette" class="img-fluid mb-4"
-             id="recipe-image">
-        <?php
-    }
-    ?>
+    <div class="container">
+        <div id="myCarousel" class="carousel slide" data-ride="carousel">
+            <!-- Indicators -->
+            <ol class="carousel-indicators">
+                <?php foreach ($recipe->image_paths as $index => $image): ?>
+                    <li data-target="#myCarousel"
+                        data-slide-to="<?= $index ?>" <?= $index === 0 ? 'class="active"' : '' ?>></li>
+                <?php endforeach; ?>
+            </ol>
+
+            <!-- Wrapper for slides -->
+            <div class="carousel-inner">
+                <?php foreach ($recipe->image_paths as $index => $image): ?>
+                    <?php if (str_contains($image, 'default')) $image = explode('_', $image)[1]; ?>
+                    <div class="item <?= $index === 0 ? 'active' : '' ?>">
+                        <img src="<?= Application::$API_URL . "uploads/" . $image ?>" alt="Image de la recette"
+                             style="width:600px; height:auto;">
+                    </div>
+                <?php endforeach; ?>
+            </div>
+
+            <!-- Left and right controls -->
+            <a class="left carousel-control" href="#myCarousel" data-slide="prev">
+                <span class="glyphicon glyphicon-chevron-left"></span>
+                <span class="sr-only">Previous</span>
+            </a>
+            <a class="right carousel-control" href="#myCarousel" data-slide="next">
+                <span class="glyphicon glyphicon-chevron-right"></span>
+                <span class="sr-only">Next</span>
+            </a>
+        </div>
+    </div>
     <!--    <img src="https://picsum.photos/1200/600" alt="Image de la recette" class="img-fluid mb-4" id="recipe-image">-->
     <h2 class="recipe-title" id="recipe-title"><?= $recipe->recipe_title ?></h2>
     <p id="recipe-author">Recette numéro : <?= $recipe->recipe_id ?></p>
@@ -28,7 +59,7 @@ $comments = $ratings->getRatingByIdRecipe()->value;
     <p> Catégories : <?= implode(",", $recipe->categories) ?></p>
     <p id="recipe-difficulty">Difficulté : <?= $recipe->difficulty ?></p>
     <p id="recipe-calories">Calories : <?= $recipe->calories ?></p>
-    <p id="recipe-calories">Note moyenne : <?=round($recipe->average_rating,1) ?></p>
+    <p id="recipe-calories">Note moyenne : <?= round($recipe->average_rating, 1) ?></p>
     <div class="row">
         <div class="col-md-12">
             <h3 class="instructions-title">Instructions</h3>
@@ -88,21 +119,25 @@ $comments = $ratings->getRatingByIdRecipe()->value;
                         </div>
                     </div>
                     <div class="card-body background-color-light">
-                        <p class="card-text font-color-main"><?= htmlspecialchars($comment->comment) ?></p>
-                        <?php
-                        if (Application::$app->user->idUser == $comment->idUser) {
-                            ?>
-                            <div class="d-flex justify-content-end">
-                                <a href="/rating/update/<?= $comment->idRating ?>"
-                                   class="btn btn-primary-custom btn-sm mr-2">
-                                    Modifier
-                                </a>
-                                <a href="/rating/delete/<?= $comment->idRating ?>"
-                                   class="btn btn-danger-custom btn-sm">
-                                    Supprimer
-                                </a>
-                            </div>
+                        <p class="card-text font-color-main">
                             <?php
+                            if ($comment->comment == null) echo "Aucun commentaire";
+                            ?>
+
+                            <?php
+                            if (Application::$app->user->idUser == $comment->idUser) {
+                            ?>
+                        <div class="d-flex justify-content-end">
+                            <a href="/rating/update/<?= $comment->idRating ?>"
+                               class="btn btn-primary-custom btn-sm mr-2">
+                                Modifier
+                            </a>
+                            <a href="/rating/delete/<?= $comment->idRating ?>"
+                               class="btn btn-danger-custom btn-sm">
+                                Supprimer
+                            </a>
+                        </div>
+                        <?php
                         }
                         ?>
                     </div>

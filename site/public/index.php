@@ -28,6 +28,7 @@ $app->router->post('/recipe', [RecipeController::class, 'create']);
 
 $app->router->get('/recipe/detail/{idRecipe}', [RecipeController::class, 'detail']);
 $app->router->post('/recipe/detail/{idRecipe}', [RecipeController::class, 'detail']);
+
 $app->router->get('recipe/edit/{idRecipe}', [RecipeController::class, 'update']);
 $app->router->get('recipe/delete/{idRecipe}', [RecipeController::class, 'delete']);
 

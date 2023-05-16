@@ -17,7 +17,7 @@ class RecipeController extends Controller
 
     public function __construct()
     {
-        $this->registerMiddleware(new AuthMiddleware(['create', 'detail', 'update', 'delete', 'deleteRating', 'addFoodType', 'updateRating']));
+        $this->registerMiddleware(new AuthMiddleware(['create', 'update', 'delete', 'deleteRating', 'addFoodType', 'updateRating']));
     }
 
     /**
@@ -30,9 +30,18 @@ class RecipeController extends Controller
     {
         $ratings = new Rating();
         $model = new Recipe();
-        $recipe = $model->getRecipe("idRecipe", $request->getRouteParams()['idRecipe'])->value;
-        $ratings->idUser = Application::$app->user->idUser;
+        $recipe = $model->getRecipe("idRecipe", $request->getRouteParams()['idRecipe'], false)->value;
         $ratings->idRecipe = $request->getRouteParams()['idRecipe'];
+        $recipe->image_paths = !empty($recipe->image_paths) && str_contains($recipe->image_paths, ',') ? array_map('trim', explode(',', $recipe->image_paths)) : array($recipe->image_paths);
+        $recipe->categories = !empty($recipe->categories) && str_contains($recipe->categories, ',') ? array_map('trim', explode(',', $recipe->categories)) : array($recipe->categories);
+        $recipe->foodtypes_with_percentages = !empty($recipe->foodtypes_with_percentages) && str_contains($recipe->foodtypes_with_percentages, ',') ? array_map('trim', explode(',', $recipe->foodtypes_with_percentages)) : array($recipe->foodtypes_with_percentages);
+        if (Application::isGuest()) {
+            return $this->render(
+                'recipe_details_guest', [
+                'recipe' => $recipe, 'ratings' => $ratings
+            ]);
+        }
+        $ratings->idUser = Application::$app->user->idUser;
         if ($request->isPost()) {
             if (!isset($_POST['score'])) {
                 Application::$app->session->setFlash('error', 'Veuillez sélectionner une note');
@@ -50,9 +59,6 @@ class RecipeController extends Controller
                 Application::$app->response->redirect('/recipe/detail/' . $request->getRouteParams()['idRecipe']);
             }
         }
-        $recipe->image_paths = !empty($recipe->image_paths) && str_contains($recipe->image_paths, ',') ? array_map('trim', explode(',', $recipe->image_paths)) : array($recipe->image_paths);
-        $recipe->categories = !empty($recipe->categories) && str_contains($recipe->categories, ',') ? array_map('trim', explode(',', $recipe->categories)) : array($recipe->categories);
-        $recipe->foodtypes_with_percentages = !empty($recipe->foodtypes_with_percentages) && str_contains($recipe->foodtypes_with_percentages, ',') ? array_map('trim', explode(',', $recipe->foodtypes_with_percentages)) : array($recipe->foodtypes_with_percentages);
         return $this->render(
             'recipe_details', [
             'recipe' => $recipe, 'ratings' => $ratings
@@ -94,9 +100,9 @@ class RecipeController extends Controller
                 $model->loadData($data);
 
                 if ($model->validate()) {
-                    $apiResponse = $model->create();
-//                    Application::$app->session->setFlash('success', 'Recipe added');
-//                    Application::$app->response->redirect('/');
+                    $model->create();
+                    Application::$app->session->setFlash('success', 'Recette ajoutée avec succès');
+                    Application::$app->response->redirect('/');
                 }
             }
         }

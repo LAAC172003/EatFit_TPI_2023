@@ -188,11 +188,11 @@ INSERT INTO `recipes` (`idRecipe`, `title`, `preparation_time`, `difficulty`, `i
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `recipes_details`
+-- Stand-in structure for view `recipes_details_view`
 -- (See below for the actual view)
 --
-DROP VIEW IF EXISTS `recipes_details`;
-CREATE TABLE IF NOT EXISTS `recipes_details` (
+DROP VIEW IF EXISTS `recipes_details_view`;
+CREATE TABLE IF NOT EXISTS `recipes_details_view` (
 `recipe_id` int unsigned
 ,`recipe_title` varchar(255)
 ,`recipe_instructions` text
@@ -210,11 +210,11 @@ CREATE TABLE IF NOT EXISTS `recipes_details` (
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `recipes_foodtypes`
+-- Stand-in structure for view `recipes_foodtypes_view`
 -- (See below for the actual view)
 --
-DROP VIEW IF EXISTS `recipes_foodtypes`;
-CREATE TABLE IF NOT EXISTS `recipes_foodtypes` (
+DROP VIEW IF EXISTS `recipes_foodtypes_view`;
+CREATE TABLE IF NOT EXISTS `recipes_foodtypes_view` (
 `idRecipe` int unsigned
 ,`foodtypes_with_percentages` text
 );
@@ -395,22 +395,43 @@ INSERT INTO `users` (`idUser`, `username`, `email`, `password`, `token`, `expira
 -- --------------------------------------------------------
 
 --
--- Structure for view `recipes_details`
+-- Structure for view `recipes_details_view`
 --
-DROP TABLE IF EXISTS `recipes_details`;
+DROP TABLE IF EXISTS `recipes_details_view`;
 
-DROP VIEW IF EXISTS `recipes_details`;
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `recipes_details`  AS SELECT `r`.`idRecipe` AS `recipe_id`, `r`.`title` AS `recipe_title`, `r`.`instructions` AS `recipe_instructions`, `r`.`preparation_time` AS `preparation_time`, `r`.`difficulty` AS `difficulty`, `r`.`calories` AS `calories`, `r`.`created_at` AS `created_at`, `u`.`username` AS `creator_username`, `u`.`idUser` AS `creator_id`, group_concat(distinct `ri`.`path` separator ', ') AS `image_paths`, group_concat(distinct `c`.`name` separator ', ') AS `categories`, `rf`.`foodtypes_with_percentages` AS `foodtypes_with_percentages` FROM (((((`recipes` `r` left join `users` `u` on((`r`.`idUser` = `u`.`idUser`))) left join `recipes_images` `ri` on((`r`.`idRecipe` = `ri`.`idRecipe`))) left join `recipe_categories` `rc` on((`r`.`idRecipe` = `rc`.`idRecipe`))) left join `categories` `c` on((`rc`.`idCategory` = `c`.`idCategory`))) left join `recipes_foodtypes` `rf` on((`r`.`idRecipe` = `rf`.`idRecipe`))) GROUP BY `r`.`idRecipe`  ;
+DROP VIEW IF EXISTS `recipes_details_view`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `recipes_details_view`  AS SELECT
+    `r`.`idRecipe` AS `recipe_id`,
+    `r`.`title` AS `recipe_title`,
+    `r`.`instructions` AS `recipe_instructions`,
+    `r`.`preparation_time` AS `preparation_time`,
+    `r`.`difficulty` AS `difficulty`,
+    `r`.`calories` AS `calories`,
+    `r`.`created_at` AS `created_at`,
+    `u`.`username` AS `creator_username`,
+    `u`.`idUser` AS `creator_id`,
+    group_concat(distinct CONCAT(`ri`.`idImage`, '_', `ri`.`path`) separator ', ') AS `image_paths`,
+    group_concat(distinct `c`.`name` separator ', ') AS `categories`,
+    `rf`.`foodtypes_with_percentages` AS `foodtypes_with_percentages`,
+    COALESCE(AVG(`rr`.`score`), 0) AS `average_rating`
+FROM (((((`recipes` `r`
+    left join `users` `u` on((`r`.`idUser` = `u`.`idUser`)))
+    left join `recipes_images` `ri` on((`r`.`idRecipe` = `ri`.`idRecipe`)))
+    left join `recipe_categories` `rc` on((`r`.`idRecipe` = `rc`.`idRecipe`)))
+    left join `categories` `c` on((`rc`.`idCategory` = `c`.`idCategory`)))
+    left join `recipes_foodtypes_view` `rf` on((`r`.`idRecipe` = `rf`.`idRecipe`)))
+    left join `ratings` `rr` on((`r`.`idRecipe` = `rr`.`idRecipe`))
+GROUP BY `r`.`idRecipe`;
 
 -- --------------------------------------------------------
 
 --
--- Structure for view `recipes_foodtypes`
+-- Structure for view `recipes_foodtypes_view`
 --
-DROP TABLE IF EXISTS `recipes_foodtypes`;
+DROP TABLE IF EXISTS `recipes_foodtypes_view`;
 
-DROP VIEW IF EXISTS `recipes_foodtypes`;
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `recipes_foodtypes`  AS SELECT `rft`.`idRecipe` AS `idRecipe`, group_concat(concat(`ft`.`name`,' (',`rft`.`percentage`,'%)') separator ', ') AS `foodtypes_with_percentages` FROM (`recipe_food_types` `rft` join `food_types` `ft` on((`rft`.`idFoodType` = `ft`.`idFoodType`))) GROUP BY `rft`.`idRecipe`  ;
+DROP VIEW IF EXISTS `recipes_foodtypes_view`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `recipes_foodtypes_view`  AS SELECT `rft`.`idRecipe` AS `idRecipe`, group_concat(concat(`ft`.`name`,' (',`rft`.`percentage`,'%)') separator ', ') AS `foodtypes_with_percentages` FROM (`recipe_food_types` `rft` join `food_types` `ft` on((`rft`.`idFoodType` = `ft`.`idFoodType`))) GROUP BY `rft`.`idRecipe`  ;
 
 --
 -- Constraints for dumped tables

@@ -17,8 +17,7 @@ use Eatfit\Site\Core\View;
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet">
 
     <!-- Styles -->
-    <link rel="stylesheet" type="text/css"
-          href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
     <link rel="stylesheet" type="text/css" href="/css/style.css">
 </head>
@@ -97,16 +96,7 @@ use Eatfit\Site\Core\View;
     </div>
 
 </main>
-<footer class="mt-auto">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <p class="text-center font-weight-bold">&copy; 2023 Eatfit</p>
-            </div>
-        </div>
-    </div>
-    </div>
-</footer>
+
 <!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>

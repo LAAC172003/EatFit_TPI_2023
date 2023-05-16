@@ -30,7 +30,7 @@ $form = new Form();
                 <small class="form-text text-danger help-block"></small>
             </div>
             <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary">Inscription</button>
+                <button type="submit" class="btn btn-primary">S'inscrire</button>
             </div>
             <div class="mt-3 text-center">
                 <a href="/login" class="text-muted">Déjà un compte ? Connectez-vous ici</a>

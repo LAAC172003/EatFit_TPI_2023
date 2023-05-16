@@ -9,6 +9,7 @@ class FoodType extends Model
     public int $idFoodType = 0;
     public string $name = '';
 
+
     public static function getFoodTypes()
     {
         return self::getJsonResult([

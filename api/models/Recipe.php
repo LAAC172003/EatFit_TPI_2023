@@ -32,6 +32,7 @@ class Recipe extends Model
                 foreach ($data['filter'] as $filter => $value) {
                     if ($filter == 'category') return self::filter($value)->getValues();
                     if ($filter == 'food_type') return self::filter(null, $value)->getValues();
+                    if ($filter == 'username') return self::filter(null, null, $value)->getValues();
                 }
             }
             return self::getAllRecipes();
@@ -55,7 +56,7 @@ class Recipe extends Model
      */
     public static function getRecipeById(int $idRecipe): ?array
     {
-        $query = "SELECT * FROM recipes_details WHERE recipe_id = :idRecipe";
+        $query = "SELECT * FROM recipes_details_view WHERE recipe_id = :idRecipe";
         $statement = Application::$app->db->execute($query, [":idRecipe" => $idRecipe]);
         return $statement->isEmpty() ? null : $statement->getFirstRow();
     }
@@ -63,33 +64,40 @@ class Recipe extends Model
     /**
      *
      * Filtre les recettes par catégorie ou type d'aliment.
-     * @param null|string $category La catégorie de recettes à filtrer
-     * @param null|string $foodType Le type d'aliment à filtrer
-     * @return SqlResult Les résultats du filtrage
+     * @param null $category
+     * @param null $foodType
+     * @param null $username
+     * @return SqlResult|Exception Les résultats du filtrage
      * @throws Exception En cas d'erreur
      */
-    public static function filter($category = null, $foodType = null): SqlResult
+    public static function filter($category = null, $foodType = null, $username = null): SqlResult|Exception
     {
-        $sql = "SELECT recipes_details.* FROM recipes_details ";
+        $sql = "SELECT recipes_details_view.* FROM recipes_details_view ";
         $where = [];
         $params = [];
         if ($category !== null) {
-            $where[] = 'FIND_IN_SET(:category, recipes_details.categories) > 0';
+            $where[] = 'FIND_IN_SET(:category, recipes_details_view.categories) > 0';
             $params[':category'] = $category;
         }
         if ($foodType !== null) {
-            $where[] = 'FIND_IN_SET(:foodType, recipes_details.foodtypes_with_percentages) > 0';
+            $where[] = 'FIND_IN_SET(:foodType, recipes_details_view.foodtypes_with_percentages) > 0';
             $params[':foodType'] = $foodType;
+        }
+        if ($username !== null) {
+            $where[] = 'recipes_details_view.creator_username = :username';
+            $params[':username'] = $username;
         }
         if (!empty($where)) {
             $sql .= 'WHERE ' . implode(' AND ', $where) . ' ';
         }
+        $sql .= 'ORDER BY `recipes_details_view`.`created_at` DESC';
+
         try {
             return Application::$app->db->execute($sql, $params);
         } catch (Exception $e) {
-            var_dump($e);
             throw new Exception("Erreur lors du filtrage des recettes", 500);
         }
+
     }
 
     /**
@@ -100,8 +108,8 @@ class Recipe extends Model
      */
     private static function getAllRecipes(): array
     {
-        $statement = Application::$app->db->execute("SELECT * FROM recipes_details");
-        if ($statement->isEmpty()) throw new Exception("No recipes found", 404);
+        $statement = Application::$app->db->execute("SELECT * FROM recipes_details_view");
+        if ($statement->isEmpty()) throw new Exception("Aucune recette trouvée", 404);
         return $statement->getValues();
     }
 
@@ -118,10 +126,10 @@ class Recipe extends Model
         $isDate = $date && $date->format('Y-m-d') === $search;
         $searchForText = "%{$search}%";
         $searchForDate = $isDate ? $search : '';
-        $sql = "SELECT recipes_details.* FROM recipes_details 
-            WHERE recipes_details.recipe_title LIKE :searchText 
-            OR recipes_details.categories LIKE :searchText 
-            OR DATE_FORMAT(recipes_details.created_at, '%Y-%m-%d') = :searchDate";
+        $sql = "SELECT recipes_details_view.* FROM recipes_details_view 
+            WHERE recipes_details_view.recipe_title LIKE :searchText 
+            OR recipes_details_view.categories LIKE :searchText 
+            OR DATE_FORMAT(recipes_details_view.created_at, '%Y-%m-%d') = :searchDate";
         return Application::$app->db->execute($sql, [':searchText' => $searchForText, ':searchDate' => $searchForDate]);
     }
 
@@ -152,15 +160,20 @@ class Recipe extends Model
         try {
             Application::$app->db->beginTransaction();
             self::insertRecipe($data);
-            self::insertRecipeCategories($data);
-            self::insertRecipeFoodType($data);
-            self::insertRecipeImages($data);
+            $idRecipe = Application::$app->db->getLastInsertId();
+            var_dump($idRecipe);
+            self::insertRecipeCategories($data, $idRecipe);
+            self::insertRecipeFoodType($data, $idRecipe);
+            self::insertRecipeImages($data, $idRecipe);
             Application::$app->db->commit();
         } catch (Exception $e) {
             Application::$app->db->rollBack();
+            var_dump($e);
             throw new Exception("Erreur lors de la création de la recette : " . $e->getMessage(), 500);
         }
+
         return self::getRecipe($data['title'])->getFirstRow();
+
     }
 
     /**
@@ -231,12 +244,13 @@ class Recipe extends Model
      * @param array $data Les données de la recette
      * @throws Exception En cas d'erreur lors de l'insertion des catégories
      */
-    private static function insertRecipeCategories(array $data): void
+    private static function insertRecipeCategories(array $data, $idRecipe): void
     {
+
         Application::$app->db->execute(
-            "INSERT INTO recipe_categories (idRecipe, idCategory) VALUES ((SELECT idRecipe FROM recipes WHERE title = :title), (SELECT idCategory FROM categories WHERE name = :name))",
+            "INSERT INTO recipe_categories (idRecipe, idCategory) VALUES (:idRecipe, (SELECT idCategory FROM categories WHERE name = :name))",
             [
-                ":title" => $data['title'],
+                ":idRecipe" => $idRecipe,
                 ":name" => $data['category']
             ]
         );
@@ -248,17 +262,17 @@ class Recipe extends Model
      * @param array $data Les données de la recette
      * @throws Exception En cas d'erreur lors de l'insertion des types d'aliments
      */
-    private static function insertRecipeFoodType(array $data): void
+    private static function insertRecipeFoodType(array $data, $idRecipe): void
     {
         $values = [];
         $parameters = [];
         foreach ($data['food_type'] as $index => $food_type) {
-            $values[] = "((SELECT idRecipe FROM recipes WHERE title = :title), (SELECT idFoodType FROM food_types WHERE name = :name{$index}), :percentage{$index})";
+            $values[] = "((SELECT idRecipe FROM recipes WHERE idRecipe = :idRecipe), (SELECT idFoodType FROM food_types WHERE name = :name{$index}), :percentage{$index})";
             $parameters[":name{$index}"] = $food_type[0];
             $parameters[":percentage{$index}"] = $food_type[1];
         }
         $query = "INSERT INTO recipe_food_types (idRecipe, idFoodType, percentage) VALUES " . implode(", ", $values);
-        $parameters[":title"] = $data['title'];
+        $parameters[":idRecipe"] = $idRecipe;
 
         Application::$app->db->execute($query, $parameters);
 
@@ -270,15 +284,15 @@ class Recipe extends Model
      * @param array $data Les données de la recette
      * @throws Exception En cas d'erreur lors de l'insertion des images
      */
-    private static function insertRecipeImages(array $data): void
+    private static function insertRecipeImages(array $data, $idRecipe): void
     {
         if ($data['image'] == "") {
             $image = Application::$app->db->execute(
                 "SELECT image_path FROM categories WHERE name = :name",
                 [":name" => $data['category']])->getFirstRow()["image_path"];
             Application::$app->db->execute(
-                "SELECT insert_unique_image_name(:path, (SELECT idRecipe FROM recipes WHERE title = :title));",
-                [":path" => $image, ":title" => $data['title']]
+                "SELECT insert_unique_image_name(:path, (SELECT idRecipe FROM recipes WHERE idRecipe = :idRecipe));",
+                [":path" => $image, ":idRecipe" => $idRecipe]
             );
         } else {
             foreach ($data['image'] as $images) {

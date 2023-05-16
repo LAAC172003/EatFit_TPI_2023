@@ -24,7 +24,7 @@ $this->title = 'Login';
                 <small class="form-text text-danger help-block"></small>
             </div>
             <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary">Login</button>
+                <button type="submit" class="btn btn-primary">Se connecter</button>
             </div>
             <br>
             <div class="mb-3">

@@ -10,7 +10,6 @@ use Eatfit\Site\Core\View;
 use Eatfit\Site\Models\ProfileModel;
 
 $this->title = 'Profile';
-var_dump($this);
 ?>
 <h2 class="text-uppercase text-center text-secondary mb-0 ">Votre profil</h2>
 <hr class="star-dark mb-5 border-dark">

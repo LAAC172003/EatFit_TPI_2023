@@ -121,6 +121,7 @@ class Recipe extends Model
 
     public function getRecipeByFilter($filter, $search)
     {
+
         return self::getJsonResult([
             'url' => 'recipe',
             'method' => 'GET',

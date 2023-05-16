@@ -77,24 +77,6 @@ nav {
     padding: 1rem 0;
 }
 
-
-/* styles for the footer */
-footer {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    color: #CC9225; /* Couleur 1 */
-    padding: 20px;
-    text-align: center;
-    background-color: #BFA17F; /* Couleur 3 */
-}
-
-footer p {
-    margin-bottom: 0;
-    font-size: 14px;
-    color: wheat; /* Couleur 1 */
-}
-
 .menu-item {
     display: flex;
     flex-direction: column;

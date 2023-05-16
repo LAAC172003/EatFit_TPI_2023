@@ -7,15 +7,16 @@ use Eatfit\Site\Models\FoodType;
 use Eatfit\Site\Models\Recipe;
 
 $this->title = 'Accueil';
-function renderCarouselWithSearch($category, $recipesByCategory, $carouselId, $searchQuery, $categoryFilter, $foodtypeFilter): void
+function renderCarouselWithSearch($category, $recipesByCategory, $carouselId, $searchQuery, $categoryFilter, $foodtypeFilter, $usernameFilter): void
 {
-    $recipesToDisplay = array_filter($recipesByCategory, function ($recipe) use ($searchQuery, $categoryFilter, $foodtypeFilter) {
+    $recipesToDisplay = array_filter($recipesByCategory, function ($recipe) use ($searchQuery, $categoryFilter, $foodtypeFilter, $usernameFilter) {
         $titleContainsSearch = empty($searchQuery) || stripos($recipe->recipe_title, $searchQuery) !== false;
         $categoryContainsSearch = empty($searchQuery) || stripos($recipe->categories, $searchQuery) !== false;
         $dateContainsSearch = empty($searchQuery) || stripos($recipe->created_at, $searchQuery) !== false;
         $categoryMatchesFilter = empty($categoryFilter) || $recipe->categories == $categoryFilter;
         $foodtypeMatchesFilter = empty($foodtypeFilter) || stripos($recipe->foodtypes_with_percentages, $foodtypeFilter) !== false;
-        return ($titleContainsSearch || $categoryContainsSearch || $dateContainsSearch) && $categoryMatchesFilter && $foodtypeMatchesFilter;
+        $usernameMatchesFilter = empty($usernameFilter) || $recipe->creator_username == $usernameFilter;
+        return ($titleContainsSearch || $categoryContainsSearch || $dateContainsSearch) && $categoryMatchesFilter && $foodtypeMatchesFilter && $usernameMatchesFilter;
     });
     if (count($recipesToDisplay) === 0) return;
     ?>
@@ -78,7 +79,7 @@ $form = Form::begin('', "post");
                 <option value="<?= $foodtype->name ?>"><?= $foodtype->name ?></option>
             <?php } ?>
         </select>
-
+        <input type="text" id="username-filter" name="username-filter" placeholder="Filtrer par utilisateur..."/>
         <button id="filter-button">Filtrer</button>
     </div>
 
@@ -88,9 +89,11 @@ $j = 0;
 $searchQuery = $_POST['search'] ?? '';
 $categoryFilter = $_POST['category-filter'] ?? '';
 $foodtypeFilter = $_POST['foodtype-filter'] ?? '';
+$usernameFilter = $_POST['username-filter'] ?? '';
 foreach ($model->getCategories()->value as $category) {
     $recipesByCategory = $model->getRecipeByFilter("category", $category->name)->value;
-    renderCarouselWithSearch($category, $recipesByCategory, $j, $searchQuery, $categoryFilter, $foodtypeFilter);
+    if ($recipesByCategory === null) continue;
+    renderCarouselWithSearch($category, $recipesByCategory, $j, $searchQuery, $categoryFilter, $foodtypeFilter, $usernameFilter);
     $j++;
 }
 

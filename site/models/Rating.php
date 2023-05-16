@@ -27,7 +27,7 @@ class Rating extends Model
         ];
     }
 
-    public function getRatingByIdRecipe()
+    public function getRatingByIdRecipe($addBearer = true)
     {
         return self::getJsonResult([
             'url' => 'rating',
@@ -35,7 +35,7 @@ class Rating extends Model
             'data' => [
                 'idRecipe' => $this->idRecipe
             ]
-        ], true);
+        ], $addBearer);
     }
 
     public function getRatingById()
