@@ -127,9 +127,10 @@ class Field extends BaseField
             );
         }
         if ($this->type === 'select') {
-            $optionsString = '';
+            $optionsString = '<option value="">Choisissez une option</option>';  // option par défaut
             foreach ($this->options as $value => $label) {
-                $optionsString .= sprintf('<option value="%s">%s</option>', $value, $label);
+                $selected = ($this->model->{$this->attribute} === $value) ? ' selected' : '';
+                $optionsString .= sprintf('<option value="%s"%s>%s</option>', $value, $selected, $label);
             }
 
             return sprintf('<select class="form-control%s" name="%s" %s %s>%s</select>',
@@ -140,6 +141,7 @@ class Field extends BaseField
                 $optionsString
             );
         }
+
         return sprintf('<input type="%s" class="form-control%s" name="%s" value="%s" %s %s>',
             $this->type,
             $this->model->hasError($this->attribute) ? ' is-invalid' : '',
@@ -158,13 +160,15 @@ class Field extends BaseField
      * @param string $placeholder Le texte d'espace réservé.
      * @return Field L'instance du champ Field.
      */
-    public function setPlaceholder(string $placeholder): self
+    public
+    function setPlaceholder(string $placeholder): self
     {
         $this->placeholder = $placeholder;
         return $this;
     }
 
-    public function fileField(): self
+    public
+    function fileField(): self
     {
         return $this->setType(self::TYPE_FILE);
     }

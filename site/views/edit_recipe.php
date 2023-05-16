@@ -38,12 +38,44 @@ $this->title = 'Modifier une recette';
                     <?php
                     $categories = array();
                     foreach ($model->getCategories()->value as $category) $categories[$category->name] = $category->name;
-                    echo $form->field($model, 'category')->selectField($categories) ?>
+                    echo $form->field($model, 'categories')->selectField($categories) ?>
                 </div>
                 <div id="foodtype-container"></div>
 
+                <!-- omitted for brevity -->
+                <table>
+                    <tr>
+                        <th>Type de nourriture</th>
+                        <th>Pourcentage</th>
+                    </tr>
+                    <?php foreach (FoodType::getFoodTypes()->value as $foodType):
+                        ?>
+                        <tr>
+                            <td><?= $foodType->name ?></td>
+                            <td>
+                                <input type="number" name="percentage[<?= $foodType->name ?>]" class="form-control"
+                                       value="<?= $model->foodType[trim($foodType->name)] ?? '' ?>">
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </table>
                 <div class="form-group">
-                    <label for="file-input">Image: </label>
+                    <br>
+                    <div class="image-container">
+                        <?php foreach ($model->image as $image):
+                            if (str_contains($image, '_')) {
+                                $image = explode('_', $image)[1];
+                            } ?>
+                            <div class="image-wrapper">
+                                <img src="<?= Application::$API_URL . "uploads/" . $image ?>" alt="<?= $image ?>">
+                                <button type="submit" name="deleteImage" value="<?= $image ?>" class="btn btn-danger">
+                                    X
+                                </button>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <br>
+                    <label class="label-dark" for="file-input">Ajouter une image: </label>
                     <br>
                     <?php
                     $acceptTypes = array();
@@ -53,45 +85,11 @@ $this->title = 'Modifier une recette';
                     <input type="file" multiple name="file-input[]" accept="<?= $acceptValue; ?>">
                 </div>
 
-                <button type="button" onclick="addFoodTypeField()">Ajouter un type de nourriture</button>
-                <button type="button" onclick="removeFoodTypeField()">Supprimer le dernier type de nourriture</button>
 
+                <!-- omitted for brevity -->
                 <button type="submit" class="btn btn-primary btn-block">Mettre à jour la recette</button>
-
                 <?php Form::end(); ?>
             </div>
         </div>
     </div>
 </main>
-
-<script>
-    function addFoodTypeField() {
-        var container = document.getElementById('foodtype-container');
-        var div = document.createElement('div');
-        div.innerHTML = `
-            <div class="form-group">
-                <label for="foodtype">Type de nourriture :</label>
-                <select name="foodtype[]" class="form-control">
-                    <?php
-        foreach (FoodType::getFoodTypes()->value as $foodType) {
-            echo "<option value='{$foodType->name}'>{$foodType->name}</option>";
-        }
-        ?>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="percentage">Pourcentage :</label>
-                <input type="number" name="percentage[]" class="form-control">
-            </div>
-        `;
-        container.appendChild(div);
-    }
-
-    function removeFoodTypeField() {
-        var container = document.getElementById('foodtype-container');
-        if (container.children.length > 0) {
-            container.removeChild(container.lastChild);
-        }
-    }
-
-</script>

@@ -142,17 +142,12 @@ class Recipe extends Model
         ]);
     }
 
-    public function update()
+    public function update($data)
     {
-        $updates = [];
-        foreach ($this->attributes() as $attribute) {
-            if ($this->{$attribute} != 'idRecipe') continue;
-            $updates[$attribute] = $this->{$attribute};
-        }
         return self::getJsonResult([
             'url' => 'recipe',
             'method' => 'PUT',
-            'data' => $updates
+            'data' => $data
         ], true);
     }
 }

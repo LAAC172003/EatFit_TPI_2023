@@ -191,27 +191,49 @@ class RecipeController extends Controller
         $recipe->image_paths = !empty($recipe->image_paths) && str_contains($recipe->image_paths, ',') ? array_map('trim', explode(',', $recipe->image_paths)) : array($recipe->image_paths);
         $recipe->categories = !empty($recipe->categories) && str_contains($recipe->categories, ',') ? array_map('trim', explode(',', $recipe->categories)) : array($recipe->categories);
         $recipe->foodtypes_with_percentages = !empty($recipe->foodtypes_with_percentages) && str_contains($recipe->foodtypes_with_percentages, ',') ? array_map('trim', explode(',', $recipe->foodtypes_with_percentages)) : array($recipe->foodtypes_with_percentages);
-
+        $foodtypes = [];
+        foreach ($recipe->foodtypes_with_percentages as $item) {
+            if (empty($item)) continue;
+            list($type, $percentage) = explode('(', rtrim($item, ')'));
+            $percentage = (int)$percentage;
+            if ($percentage > 0) $foodtypes[trim($type)] = $percentage;
+        }
         $model->idRecipe = $recipe->recipe_id;
         $model->image = $recipe->image_paths;
         $model->idUser = $recipe->creator_id;
-        $model->foodType = $recipe->foodtypes_with_percentages;
         $model->categories = $recipe->categories;
         $model->title = $recipe->recipe_title;
         $model->instructions = $recipe->recipe_instructions;
         $model->calories = $recipe->calories;
         $model->date = $recipe->created_at;
         $model->preparation_time = $recipe->preparation_time;
-//        var_dump($model, $recipe);
+        $model->foodType = $foodtypes;
         if ($model->idUser != Application::$app->user->idUser) throw new ForbiddenException();
+
         if (Application::$app->request->isPost()) {
             $data = $request->getBody();
-            $model->loadData($data);
-            var_dump($model);
-//            if ($model->update()) {
-//                Application::$app->session->setFlash('success', 'Recipe updated');
-//                Application::$app->response->redirect('/recipe');
-//            }
+            $data = array_filter($data);
+            $_POST = array_filter($_POST);
+            unset($_POST['deleteImage']);
+            unset($data['deleteImage']);
+            if (isset($_POST['percentage'])) {
+                $percentageMax = 0;
+                foreach ($_POST['percentage'] as $key => $value) {
+                    if (empty($value)) {
+                        continue;
+                    }
+                    $percentageMax += (int)$value;
+                    $foodtypes[] = [$key, (int)$value];
+                }
+                if ($percentageMax != 100) {
+                    Application::$app->session->setFlash('error', 'La somme des pourcentages doit être égale à 100');
+                    Application::$app->response->redirect('/recipe/edit/' . $model->idRecipe);
+                }
+                $data = array_merge($data, ['food_type' => $foodtypes]);
+            }
+            $data['idRecipe'] = $request->getRouteParams()['idRecipe'];
+            $model->update($data);
+            Application::$app->response->redirect('/recipe/detail/' . $model->idRecipe);
         }
         return $this->render('edit_recipe', [
             'model' => $model, 'recipe' => $recipe

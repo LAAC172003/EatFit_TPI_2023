@@ -161,7 +161,6 @@ class Recipe extends Model
             Application::$app->db->beginTransaction();
             self::insertRecipe($data);
             $idRecipe = Application::$app->db->getLastInsertId();
-            var_dump($idRecipe);
             self::insertRecipeCategories($data, $idRecipe);
             self::insertRecipeFoodType($data, $idRecipe);
             self::insertRecipeImages($data, $idRecipe);
@@ -246,7 +245,6 @@ class Recipe extends Model
      */
     private static function insertRecipeCategories(array $data, $idRecipe): void
     {
-
         Application::$app->db->execute(
             "INSERT INTO recipe_categories (idRecipe, idCategory) VALUES (:idRecipe, (SELECT idCategory FROM categories WHERE name = :name))",
             [
@@ -273,7 +271,6 @@ class Recipe extends Model
         }
         $query = "INSERT INTO recipe_food_types (idRecipe, idFoodType, percentage) VALUES " . implode(", ", $values);
         $parameters[":idRecipe"] = $idRecipe;
-
         Application::$app->db->execute($query, $parameters);
 
     }
@@ -323,21 +320,57 @@ class Recipe extends Model
         if ($recipeResult['creator_id'] != self::getUserByToken()['idUser']) throw new Exception("Non autorisé", 401);
 
         $updates = [];
-        $difficulties = ["facile", "moyen", "difficile"];
-        if (!in_array($data['difficulty'], $difficulties)) throw new Exception("Difficulté invalide : '" . $data['difficulty'] . "'. Les difficultés autorisées sont : facile, moyen, difficile", 400);
+        if (isset($data['difficulty'])) {
+            $difficulties = ["facile", "moyen", "difficile"];
+            if (!in_array($data['difficulty'], $difficulties)) throw new Exception("Difficulté invalide : '" . $data['difficulty'] . "'. Les difficultés autorisées sont : facile, moyen, difficile", 400);
+        }
+        if (isset($data['food_type'])) {
+            if (!is_array($data['food_type'])) $data['food_type'] = [$data['food_type']]; //A revoir
+        }
+        if (isset($data['preparation_time'])) {
+            if (!is_numeric($data['preparation_time'])) throw new Exception("Temps de préparation invalide : '" . $data['preparation_time'] . "'. Le temps de préparation doit être un nombre", 400);
+        }
+        if (isset($data['category'])) {
+            $categories = Application::$app->db->execute("SELECT * FROM categories")->getColumn("name");
+            if (!in_array($data['category'], $categories)) throw new Exception("Catégorie invalide : '" . $data['category'] . "'. Les catégories autorisées sont : " . implode(", ", $categories), 400);
+        }
         foreach ($data as $key => $value) {
             if ($key == "idRecipe") continue;
+            if ($key == "food_type") {
+                $updates[$key] = $value;
+                continue;
+            }
             if (isset($value) && $value != "") $updates[$key] = $value;
         }
-        $sb = "Recette mise à jour avec succès :";
+        $sb = "Recette mise à jour avec succès";
         try {
-            $query = "UPDATE recipes SET " . implode(", ", array_map(fn($key) => "$key = :$key", array_keys($updates))) . " WHERE idRecipe = :idRecipe";
-            Application::$app->db->execute($query, array_merge($updates, [":idRecipe" => $data['idRecipe']]));
-            $sb .= implode(", ", array_map(fn($key, $value) => "$key = $value", array_keys($updates), array_values($updates)));
+
+            if (isset($updates['food_type'])) {
+                self::updateFoodtype((int)$data['idRecipe'], $updates);
+                unset($updates['food_type']);
+            }
+            if (isset($data['category'])) {
+                Application::$app->db->execute("DELETE FROM recipe_categories WHERE idRecipe = :idRecipe", [":idRecipe" => $data['idRecipe']]);
+                self::insertRecipeCategories($data, $data['idRecipe']);
+                unset($updates['category']);
+            }
+            if (count($updates) > 0) {
+                $query = "UPDATE recipes SET " . implode(", ", array_map(fn($key) => "$key = :$key", array_keys($updates))) . " WHERE idRecipe = :idRecipe";
+                Application::$app->db->execute($query, array_merge($updates, [":idRecipe" => $data['idRecipe']]));
+            }
         } catch (Exception $e) {
-            throw new Exception("Erreur lors de la mise à jour de la recette", 500);
+            throw new Exception($e->getMessage(), $e->getCode());
         }
         return $sb;
+    }
+
+    /**
+     * @throws Exception
+     */
+    private static function updateFoodtype($idRecipe, $updates): void
+    {
+        Application::$app->db->execute("DELETE FROM recipe_food_types WHERE idRecipe = :idRecipe", [":idRecipe" => $idRecipe]);
+        self::insertRecipeFoodType($updates, $idRecipe);
     }
 
     /**

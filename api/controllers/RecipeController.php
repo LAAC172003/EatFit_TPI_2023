@@ -55,7 +55,7 @@ class RecipeController
      */
     public function update(Request $request): ApiValue
     {
-        return new ApiValue(Recipe::update($request->getData(["idRecipe", "title", "preparation_time", "difficulty", "instructions", "calories", "image"], false)), 200);
+        return new ApiValue(Recipe::update($request->getData(["idRecipe", "category", "title", "preparation_time", "difficulty", "instructions", "calories", "image", "food_type"], false)), 200);
     }
 
     /**
