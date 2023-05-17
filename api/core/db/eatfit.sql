@@ -29,23 +29,36 @@ SET time_zone = "+00:00";
 -- Database: `eatfit`
 --
 
+
 DELIMITER $$
 --
 -- Procedures
 --
+DROP PROCEDURE IF EXISTS `DeleteImages`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `DeleteImages` (IN `p_id_recipe` INT)   BEGIN
+    -- Select and concatenate image id and path before deleting
+SELECT CONCAT(idImage, '_', path) AS ImageID_Path
+FROM recipes_images
+WHERE idRecipe = p_id_recipe;
+
+-- Now delete the images for the given recipe
+DELETE FROM recipes_images
+WHERE idRecipe = p_id_recipe;
+END$$
+
 DROP PROCEDURE IF EXISTS `delete_recipe`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `delete_recipe` (IN `p_id_recipe` INT(11))   BEGIN
-    SELECT
-        CONCAT(idImage, '_', path)
-    FROM
-        recipes_images
-    WHERE
+SELECT
+    CONCAT(idImage, '_', path)
+FROM
+    recipes_images
+WHERE
         idRecipe = p_id_recipe ;
-    DELETE
+DELETE
 FROM
     recipes
 WHERE
-    idRecipe = p_id_recipe ; END$$
+        idRecipe = p_id_recipe ; END$$
 
 --
 -- Functions
@@ -53,14 +66,13 @@ WHERE
 DROP FUNCTION IF EXISTS `insert_unique_image_name`$$
 CREATE DEFINER=`root`@`localhost` FUNCTION `insert_unique_image_name` (`path` VARCHAR(255), `id_recipe` INT) RETURNS VARCHAR(255) CHARSET utf8mb4  BEGIN
     DECLARE
-        unique_image_name VARCHAR(255);
-    INSERT INTO recipes_images(path, idRecipe)
+unique_image_name VARCHAR(255);
+INSERT INTO recipes_images(path, idRecipe)
 VALUES(path, id_recipe);
-    RETURN CONCAT(LAST_INSERT_ID(), '_', path);
+RETURN CONCAT(LAST_INSERT_ID(), '_', path);
 END$$
 
 DELIMITER ;
-
 -- --------------------------------------------------------
 
 --

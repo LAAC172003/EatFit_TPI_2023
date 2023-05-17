@@ -27,6 +27,9 @@ class LoginForm extends Model
         ];
     }
 
+    /**
+     * Connecte l'utilisateur
+     */
     public function login()
     {
         $user = User::getUser($this->email, $this->password);

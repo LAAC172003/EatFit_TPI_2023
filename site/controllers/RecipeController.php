@@ -98,7 +98,6 @@ class RecipeController extends Controller
                 $data = array_merge($data, [['image' => $model->image], ['idUser' => $model->idUser]], [['food_type' => $model->foodType]]);
                 $model->categories = [$data['categories']];
                 $model->loadData($data);
-
                 if ($model->validate()) {
                     $model->create();
                     Application::$app->session->setFlash('success', 'Recette ajoutée avec succès');
@@ -155,7 +154,7 @@ class RecipeController extends Controller
      * @return string Le contenu HTML de la page de modification d'évaluation.
      * @throws ForbiddenException
      */
-    public function updateRating(Request $request)
+    public function updateRating(Request $request): string
     {
         $idRating = $request->getRouteParams()['idRating'];
         $model = new Rating();
@@ -192,11 +191,12 @@ class RecipeController extends Controller
         $recipe->categories = !empty($recipe->categories) && str_contains($recipe->categories, ',') ? array_map('trim', explode(',', $recipe->categories)) : array($recipe->categories);
         $recipe->foodtypes_with_percentages = !empty($recipe->foodtypes_with_percentages) && str_contains($recipe->foodtypes_with_percentages, ',') ? array_map('trim', explode(',', $recipe->foodtypes_with_percentages)) : array($recipe->foodtypes_with_percentages);
         $foodtypes = [];
+        $foodtypesArray = [];
         foreach ($recipe->foodtypes_with_percentages as $item) {
             if (empty($item)) continue;
             list($type, $percentage) = explode('(', rtrim($item, ')'));
             $percentage = (int)$percentage;
-            if ($percentage > 0) $foodtypes[trim($type)] = $percentage;
+            if ($percentage > 0) $foodtypesArray[trim($type)] = $percentage;
         }
         $model->idRecipe = $recipe->recipe_id;
         $model->image = $recipe->image_paths;
@@ -207,21 +207,18 @@ class RecipeController extends Controller
         $model->calories = $recipe->calories;
         $model->date = $recipe->created_at;
         $model->preparation_time = $recipe->preparation_time;
-        $model->foodType = $foodtypes;
+        $model->foodType = $foodtypesArray;
         if ($model->idUser != Application::$app->user->idUser) throw new ForbiddenException();
 
         if (Application::$app->request->isPost()) {
             $data = $request->getBody();
             $data = array_filter($data);
             $_POST = array_filter($_POST);
-            unset($_POST['deleteImage']);
-            unset($data['deleteImage']);
+
             if (isset($_POST['percentage'])) {
                 $percentageMax = 0;
                 foreach ($_POST['percentage'] as $key => $value) {
-                    if (empty($value)) {
-                        continue;
-                    }
+                    if (empty($value)) continue;
                     $percentageMax += (int)$value;
                     $foodtypes[] = [$key, (int)$value];
                 }
@@ -231,7 +228,25 @@ class RecipeController extends Controller
                 }
                 $data = array_merge($data, ['food_type' => $foodtypes]);
             }
-            $data['idRecipe'] = $request->getRouteParams()['idRecipe'];
+            $data['idRecipe'] = $request->getRouteParams()['idRecipe'];;
+            $validated = $model->validateAndPrepareImages($_FILES);
+            $images = [];
+            foreach ($validated as $name => $base64) $images[] = $name . "," . $base64;
+            if (!empty($validated)) $data['image'] = $images;
+            else {
+                if (isset($_POST['default'])) {
+                    if ($_POST['default'] == "on") {
+                        unset($data['default']);
+                        $data['image'] = "";
+                    }
+                } elseif (str_contains($recipe->image_paths[0], 'default')) {
+                    $data['image'] = "";
+                }
+            }
+            if (isset($data['categories'])) {
+                $data['category'] = $data['categories'];
+                unset($data['categories']);
+            }
             $model->update($data);
             Application::$app->response->redirect('/recipe/detail/' . $model->idRecipe);
         }
@@ -246,7 +261,7 @@ class RecipeController extends Controller
      * @param Request $request La requête HTTP.
      * @return string Le contenu HTML de la page d'ajout de type de nourriture.
      */
-    public function addFoodType(Request $request)
+    public function addFoodType(Request $request): string
     {
         $model = new FoodType();
         if ($request->isPost()) {

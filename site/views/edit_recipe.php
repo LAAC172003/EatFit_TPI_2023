@@ -41,8 +41,6 @@ $this->title = 'Modifier une recette';
                     echo $form->field($model, 'categories')->selectField($categories) ?>
                 </div>
                 <div id="foodtype-container"></div>
-
-                <!-- omitted for brevity -->
                 <table>
                     <tr>
                         <th>Type de nourriture</th>
@@ -63,14 +61,10 @@ $this->title = 'Modifier une recette';
                     <br>
                     <div class="image-container">
                         <?php foreach ($model->image as $image):
-                            if (str_contains($image, '_')) {
-                                $image = explode('_', $image)[1];
-                            } ?>
+                            if (str_contains($image, 'default')) continue;
+                            ?>
                             <div class="image-wrapper">
                                 <img src="<?= Application::$API_URL . "uploads/" . $image ?>" alt="<?= $image ?>">
-                                <button type="submit" name="deleteImage" value="<?= $image ?>" class="btn btn-danger">
-                                    X
-                                </button>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -82,11 +76,12 @@ $this->title = 'Modifier une recette';
                     foreach (Application::$ALLOWED_IMAGE_EXTENSIONS as $extension) $acceptTypes[] = 'image/' . $extension;
                     $acceptValue = implode(',', $acceptTypes);
                     ?>
+                    <label for="default">Image par défaut
+                        <input type="checkbox" name="default">
+                    </label>
+                    <br>
                     <input type="file" multiple name="file-input[]" accept="<?= $acceptValue; ?>">
                 </div>
-
-
-                <!-- omitted for brevity -->
                 <button type="submit" class="btn btn-primary btn-block">Mettre à jour la recette</button>
                 <?php Form::end(); ?>
             </div>

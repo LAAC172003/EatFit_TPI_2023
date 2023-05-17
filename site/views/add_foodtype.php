@@ -10,7 +10,7 @@ $this->title = 'Ajouter un nouveau type'; ?>
 
 <?php $form = Form::begin("", "post") ?>
 <div class="form-group">
-<!--    <label for="name">Food Type Name</label>-->
+    <!--    <label for="name">Food Type Name</label>-->
     <?php echo $form->field($model, 'name') ?>
     <div class="invalid-feedback">
         <?= $model->getFirstError('name') ?>

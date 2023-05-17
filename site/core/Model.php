@@ -43,7 +43,6 @@ class Model
             CURLOPT_HTTPHEADER => $http_header,
         ));
         $response = curl_exec($curl);
-        var_dump($response);
         if (curl_errno($curl)) $error_msg = curl_error($curl);
         curl_close($curl);
         return $error_msg ?? json_decode($response, $returnArray);

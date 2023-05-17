@@ -34,17 +34,6 @@ class HistoryController
     }
 
     /**
-     * Supprime toutes les entrées d'historique.
-     *
-     * @param Request $request La requête HTTP.
-     * @return ApiValue L'objet ApiValue contenant la réponse de l'API.
-     */
-    public function deleteAll(Request $request): ApiValue
-    {
-        return new ApiValue(History::deleteAll(), 200);
-    }
-
-    /**
      * Met à jour une entrée d'historique spécifiée.
      *
      * @param Request $request La requête HTTP.

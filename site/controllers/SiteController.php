@@ -3,16 +3,10 @@
 namespace Eatfit\Site\Controllers;
 
 use Eatfit\Site\Core\Controller;
-use Eatfit\Site\Core\Middlewares\AuthMiddleware;
 use Eatfit\Site\Models\Recipe;
 
 class SiteController extends Controller
 {
-    public function __construct()
-    {
-        $this->registerMiddleware(new AuthMiddleware(['profile']));
-    }
-
     /**
      * Affiche la page d'accueil.
      *
@@ -22,7 +16,7 @@ class SiteController extends Controller
     {
         $recipeModel = new Recipe();
         return $this->render('home', [
-            'name' => 'Lucas Almeida Costa', 'model' => $recipeModel
+            'model' => $recipeModel
         ]);
     }
 }

@@ -3,7 +3,6 @@
 namespace Eatfit\Site\models;
 
 use Eatfit\Site\Core\Model;
-use Exception;
 
 class ProfileModel extends Model
 {
@@ -34,7 +33,8 @@ class ProfileModel extends Model
     }
 
     /**
-     * @throws Exception
+     *
+     * Met a jour l'utilisateur
      */
     public function update()
     {
@@ -55,6 +55,9 @@ class ProfileModel extends Model
         return ['username', 'email', 'password', 'confirm_password'];
     }
 
+    /**
+     * supprime l'utilisateur
+     */
     public function delete()
     {
         return self::getJsonResult([

@@ -117,7 +117,6 @@ class Router
                 return $callback;
             }
         }
-
         return false;
     }
 

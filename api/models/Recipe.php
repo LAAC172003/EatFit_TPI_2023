@@ -167,12 +167,9 @@ class Recipe extends Model
             Application::$app->db->commit();
         } catch (Exception $e) {
             Application::$app->db->rollBack();
-            var_dump($e);
             throw new Exception("Erreur lors de la création de la recette : " . $e->getMessage(), 500);
         }
-
         return self::getRecipe($data['title'])->getFirstRow();
-
     }
 
     /**
@@ -354,12 +351,19 @@ class Recipe extends Model
                 self::insertRecipeCategories($data, $data['idRecipe']);
                 unset($updates['category']);
             }
+            if (isset($data['image'])) {
+                $paths = Application::$app->db->execute("CALL DeleteImages(:idRecipe)", [":idRecipe" => $data['idRecipe']])->getColumn("ImageID_Path");
+                foreach ($paths as $path) unlink(Application::$UPLOAD_PATH . $path);
+                if (!isset($data['category'])) $data['category'] = $recipeResult['categories'];
+                self::insertRecipeImages($data, $data['idRecipe']);
+                unset($updates['image']);
+            }
             if (count($updates) > 0) {
                 $query = "UPDATE recipes SET " . implode(", ", array_map(fn($key) => "$key = :$key", array_keys($updates))) . " WHERE idRecipe = :idRecipe";
                 Application::$app->db->execute($query, array_merge($updates, [":idRecipe" => $data['idRecipe']]));
             }
         } catch (Exception $e) {
-            throw new Exception($e->getMessage(), $e->getCode());
+            throw new Exception($e->getMessage(), 500);
         }
         return $sb;
     }
