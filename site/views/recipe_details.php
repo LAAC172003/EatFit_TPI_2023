@@ -122,6 +122,7 @@ $comments = $ratings->getRatingByIdRecipe()->value;
                         <p class="card-text font-color-main">
                             <?php
                             if ($comment->comment == null) echo "Aucun commentaire";
+                            else echo $comment->comment;
                             ?>
 
                             <?php

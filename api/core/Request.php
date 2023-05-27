@@ -137,7 +137,6 @@ class Request
                 $allowedFields = array_map(function ($key, $value) {
                     return is_array($value) ? $key : $value;
                 }, array_keys($requiredFields), $requiredFields);
-
                 $missingFieldsFormatted = array_map(function ($field) {
                     return str_replace(explode('.', $field)[0] . ".", '', $field);
                 }, $missingFields);

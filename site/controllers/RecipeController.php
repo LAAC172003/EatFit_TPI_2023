@@ -163,7 +163,7 @@ class RecipeController extends Controller
 
         $model->idRecipe = $test->value[0]->idRecipe;
         $model->score = $test->value[0]->score;
-        $model->comment = $test->value[0]->comment;
+        $model->comment = (string)$test->value[0]->comment;
         if ($test->value[0]->idUser != Application::$app->user->idUser) throw new ForbiddenException();
         if ($request->isPost()) {
             if (isset($_POST['score'])) $model->score = $_POST['score'];
@@ -268,6 +268,7 @@ class RecipeController extends Controller
             $model->loadData($request->getBody());
             if ($model->validate()) {
                 $apiResponse = $model->save();
+                var_dump($apiResponse);
                 if ($apiResponse->value == null) Application::$app->session->setFlash('error', $apiResponse->message);
                 else Application::$app->session->setFlash('success', "Votre évaluation a été modifiée");
                 Application::$app->response->redirect('/');

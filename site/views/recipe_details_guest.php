@@ -80,6 +80,7 @@ $comments = $ratings->getRatingByIdRecipe(false)->value;
                     <div class="card-body background-color-light">
                         <p class="card-text font-color-main">      <?php
                             if ($comment->comment == null) echo "Aucun commentaire";
+                            else echo $comment->comment;
                             ?></p>
                     </div>
                 </div>
