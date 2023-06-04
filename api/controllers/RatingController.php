@@ -56,6 +56,4 @@ class RatingController
     {
         return new ApiValue(Rating::delete($request->getData(["idRating"])), 200);
     }
-
-
 }
