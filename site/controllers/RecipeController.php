@@ -270,7 +270,7 @@ class RecipeController extends Controller
                 $apiResponse = $model->save();
                 var_dump($apiResponse);
                 if ($apiResponse->value == null) Application::$app->session->setFlash('error', $apiResponse->message);
-                else Application::$app->session->setFlash('success', "Votre évaluation a été modifiée");
+                else Application::$app->session->setFlash('success', "Le type de nourriture a été ajouté");
                 Application::$app->response->redirect('/');
             }
         }

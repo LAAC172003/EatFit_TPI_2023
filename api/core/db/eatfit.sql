@@ -3,10 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: May 15, 2023 at 01:20 PM
+-- Generation Time: Jun 05, 2023 at 02:43 PM
 -- Server version: 8.0.31
--- PHP Version: 8.2.0
-
+-- PHP Version: 8.0.26
 DROP DATABASE IF EXISTS eatfit;
 DROP USER IF EXISTS 'eatfit'@'localhost';
 CREATE USER 'eatfit'@'localhost' IDENTIFIED BY 'EatFit';
@@ -28,7 +27,6 @@ SET time_zone = "+00:00";
 --
 -- Database: `eatfit`
 --
-
 
 DELIMITER $$
 --
@@ -73,6 +71,7 @@ RETURN CONCAT(LAST_INSERT_ID(), '_', path);
 END$$
 
 DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
@@ -114,7 +113,7 @@ CREATE TABLE IF NOT EXISTS `consumed_recipes` (
   PRIMARY KEY (`idConsumedRecipe`),
   KEY `idUser` (`idUser`),
   KEY `idRecipe` (`idRecipe`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb3;
 
 -- --------------------------------------------------------
 
@@ -127,7 +126,7 @@ CREATE TABLE IF NOT EXISTS `food_types` (
   `idFoodType` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   PRIMARY KEY (`idFoodType`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Dumping data for table `food_types`
@@ -158,7 +157,7 @@ CREATE TABLE IF NOT EXISTS `ratings` (
   PRIMARY KEY (`idRating`),
   KEY `idUser` (`idUser`),
   KEY `idRecipe` (`idRecipe`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb3;
 
 -- --------------------------------------------------------
 
@@ -178,24 +177,23 @@ CREATE TABLE IF NOT EXISTS `recipes` (
   `idUser` int UNSIGNED NOT NULL,
   PRIMARY KEY (`idRecipe`),
   KEY `idUser` (`idUser`)
-) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Dumping data for table `recipes`
 --
 
 INSERT INTO `recipes` (`idRecipe`, `title`, `preparation_time`, `difficulty`, `instructions`, `calories`, `created_at`, `idUser`) VALUES
-(37, 'Pancakes aux myrtilles', 30, 'moyen', 'Dans un saladier, mélangez la farine, le sucre, la levure et le sel. Dans un autre récipient, battez les œufs, le lait et le beurre fondu. Incorporez les ingrédients secs aux ingrédients humides. Ajoutez les myrtilles. Faites chauffer une poêle légèrement huilée. Versez une louche de pâte pour chaque pancake. Retournez quand des bulles se forment à la surface. Servez chaud avec du sirop d\'érable.', 250, '2023-05-15 11:01:26', 7),
-(38, 'Salade César au poulet grillé', 25, 'facile', 'Faites griller le poulet et coupez-le en tranches. Lavez la laitue et séchez-la. Dans un grand saladier, mélangez la laitue, le poulet, des croûtons et du parmesan râpé. Arrosez de sauce César et mélangez bien. Servez immédiatement.', 350, '2023-05-15 11:01:52', 7),
-(39, 'Pâtes à la Carbonara', 20, 'facile', 'Faites cuire les pâtes selon les instructions sur l\'emballage. Pendant ce temps, faites revenir les lardons dans une poêle jusqu\'à ce qu\'ils soient croustillants. Dans un bol, battez les œufs, ajoutez le parmesan râpé et poivrez. Égouttez les pâtes, puis mélangez-les avec les lardons. Hors du feu, ajoutez le mélange d\'œufs et remuez rapidement pour obtenir une sauce crémeuse. Servez immédiatement.', 450, '2023-05-15 11:03:43', 7),
-(40, 'Pizza Margherita', 30, 'facile', 'Préchauffez le four à 220°C. Étalez la pâte à pizza sur une plaque de cuisson. Étalez une couche de sauce tomate sur la pâte. Disposez les tranches de mozzarella sur la sauce tomate. Ajoutez quelques feuilles de basilic. Enfournez pendant environ 15 minutes ou jusqu\'à ce que la croûte soit dorée et le fromage fondu. Servez chaud.', 300, '2023-05-15 11:03:55', 7),
-(41, 'Smoothie aux fruits rouges', 10, 'facile', 'Dans un blender, ajoutez les fruits rouges congelés, le yaourt nature, le lait et le miel. Mixez jusqu\'à obtention d\'une consistance lisse. Versez le smoothie dans des verres et servez frais.', 200, '2023-05-15 11:04:02', 7),
-(42, 'Salade de quinoa aux légumes', 30, 'facile', 'Faites cuire le quinoa selon les instructions sur l\'emballage. Laissez refroidir. Dans un saladier, mélangez le quinoa refroidi, les légumes coupés en dés, les herbes fraîches hachées et les graines de votre choix. Assaisonnez avec du jus de citron, de l\'huile d\'olive, du sel et du poivre. Mélangez bien et servez frais.', 350, '2023-05-15 11:04:30', 7),
-(43, 'Sauté de poulet aux légumes', 25, 'facile', 'Coupez le poulet en dés et faites-le sauter dans une poêle avec un peu d\'huile d\'olive jusqu\'à ce qu\'il soit bien cuit. Ajoutez les légumes coupés en julienne (comme les carottes, les poivrons et les courgettes) et faites-les sauter pendant quelques minutes. Assaisonnez avec du sel, du poivre, de l\'ail en poudre et du gingembre en poudre. Servez chaud.', 400, '2023-05-15 11:04:36', 7),
-(44, 'Tarte aux pommes', 40, 'moyen', 'Préchauffez le four à 180°C. Étalez la pâte brisée dans un moule à tarte. Disposez les tranches de pommes sur la pâte en les superposant légèrement. Saupoudrez de sucre et de cannelle. Enfournez pendant environ 30 minutes ou jusqu\'à ce que la pâte soit dorée et les pommes tendres. Servez tiède ou froid.', 250, '2023-05-15 11:04:53', 7),
-(45, 'Omelette aux légumes', 15, 'facile', 'Battez les œufs dans un bol. Dans une poêle antiadhésive, faites chauffer un peu d\'huile d\'olive. Ajoutez les légumes de votre choix, tels que des poivrons, des champignons et des épinards, et faites-les sauter pendant quelques minutes. Versez les œufs battus sur les légumes et faites cuire l\'omelette jusqu\'à ce qu\'elle soit prise. Repliez-la en deux et servez chaud.', 300, '2023-05-15 11:05:22', 7),
-(46, 'Soupe à la tomate', 35, 'facile', 'Dans une casserole, faites revenir des oignons et de l\'ail hachés dans de l\'huile d\'olive. Ajoutez des tomates concassées en conserve, du bouillon de légumes, du basilic frais haché et du sel. Laissez mijoter pendant environ 20 minutes. Mixez la soupe jusqu\'à obtenir une consistance lisse. Réchauffez-la avant de servir.', 150, '2023-05-15 11:05:50', 7),
-(47, 'Smoothie vert détox', 10, 'facile', 'Dans un blender, mixez une poignée d\'épinards frais, un concombre pelé et coupé en morceaux, un kiwi pelé, une banane et un peu d\'eau. Ajoutez du jus de citron et du miel selon vos goûts. Mixez jusqu\'à obtenir une consistance lisse. Versez le smoothie dans des verres et servez frais.', 200, '2023-05-15 11:06:06', 7);
+(1, 'Salade de quinoa aux légumes grillés', 30, 'facile', 'Commencez par préchauffer votre grill à feu moyen. Préparez les légumes en les coupant en lanières, rondelles ou dés, selon les indications pour chaque légume. Dans un bol, mélangez les légumes préparés avec 2 cuillères à soupe d\'huile d\'olive, du sel et du poivre. Veillez à bien enrober les légumes d\'huile et d\'assaisonnement. Placez les légumes sur la grille du grill préchauffé et laissez-les griller pendant environ 10 minutes, en les retournant régulièrement. Les légumes doivent devenir tendres et légèrement dorés, sans les brûler. Pendant ce temps, réchauffez 1 tasse de quinoa cuit selon les instructions sur l\'emballage. Une fois les légumes grillés prêts, retirez-les du grill et laissez-les refroidir légèrement. Dans un grand bol, mélangez le quinoa cuit avec les légumes grillés. Assaisonnez avec du sel et du poivre selon votre goût. Ajoutez des herbes fraîches comme de la coriandre ou du persil haché pour plus de saveur, si vous le souhaitez. Servez la salade de quinoa aux légumes grillés tiède ou à température ambiante.', 350, '2023-06-05 09:09:41', 1),
+(3, 'Smoothie aux fruits tropicaux', 10, 'facile', 'Dans un mixeur, ajoutez 1 banane, 1 tasse d\'ananas frais coupé en morceaux, 1/2 tasse de mangue coupée en dés, 1/2 tasse de lait de coco et quelques glaçons. Mixez jusqu\'à obtenir une consistance lisse. Servez frais dans des verres. Vous pouvez décorer avec des tranches de fruits tropicaux si vous le souhaitez.', 200, '2023-06-05 09:11:11', 1),
+(4, 'Salade de poulet grillé', 25, 'moyen', 'Assaisonnez 2 poitrines de poulet avec du sel, du poivre, du paprika et du jus de citron. Faites griller le poulet sur un barbecue chaud pendant environ 15-20 minutes, jusqu\'à ce qu\'il soit bien cuit. Laissez refroidir légèrement, puis coupez-le en tranches. Dans un grand bol, mélangez de la laitue, des tomates cerises coupées en deux, des concombres en tranches, des tranches d\'avocat et les tranches de poulet grillé. Ajoutez une vinaigrette de votre choix et mélangez bien. Servez immédiatement.', 400, '2023-06-05 09:11:26', 1),
+(5, 'Tarte aux pommes', 45, 'difficile', 'Préparez la pâte en mélangeant 2 tasses de farine, 1/2 cuillère à café de sel et 1/2 tasse de beurre froid coupé en petits morceaux. Ajoutez de l\'eau froide petit à petit jusqu\'à obtenir une pâte homogène. Réfrigérez la pâte pendant 30 minutes. Préchauffez le four à 200°C. Épluchez et coupez en tranches 4 pommes. Étalez la pâte dans un moule à tarte, puis disposez les tranches de pommes sur la pâte. Saupoudrez de sucre et de cannelle selon votre goût. Cuisez la tarte au four pendant environ 30 minutes, jusqu\'à ce que la pâte soit dorée et les pommes tendres. Laissez refroidir avant de servir.', 300, '2023-06-05 09:11:56', 1),
+(6, 'Wrap au poulet et aux légumes', 20, 'facile', 'Dans un bol, mélangez 1 tasse de poulet cuit et coupé en dés, 1/2 tasse de poivrons colorés en dés, 1/4 tasse de carottes râpées et 1/4 tasse de laitue hachée. Ajoutez 2 cuillères à soupe de mayonnaise légère et mélangez bien. Réchauffez une tortilla de blé entier au micro-ondes pendant quelques secondes. Étalez la préparation au poulet et aux légumes sur la tortilla et roulez-la fermement. Coupez le wrap en deux et servez.', 350, '2023-06-05 09:12:15', 1),
+(7, 'Spaghetti à la bolognaise', 40, 'moyen', 'Faites chauffer de l\'huile d\'olive dans une grande poêle. Ajoutez 1 oignon et 2 gousses d\'ail hachés, et faites revenir jusqu\'à ce qu\'ils soient dorés. Ajoutez 500 g de viande hachée et faites-la cuire jusqu\'à ce qu\'elle soit bien brune. Ajoutez 1 boîte de tomates concassées, 2 cuillères à soupe de concentré de tomates, 1 cuillère à soupe d\'origan séché, du sel et du poivre. Laissez mijoter pendant 20 minutes. Pendant ce temps, faites cuire les spaghetti selon les instructions sur l\'emballage. Égouttez les spaghetti et mélangez-les avec la sauce bolognaise. Servez chaud avec du parmesan râpé.', 500, '2023-06-05 09:12:27', 1),
+(8, 'Smoothie vert détox', 10, 'facile', 'Dans un mixeur, ajoutez 2 poignées d\'épinards frais, 1 banane, 1/2 concombre, 1 branche de céleri, le jus d\'un citron vert et 1 tasse d\'eau de coco. Mixez jusqu\'à obtenir une consistance lisse. Ajoutez quelques glaçons et mixez à nouveau. Versez le smoothie dans des verres et dégustez immédiatement.', 150, '2023-06-05 09:12:45', 1),
+(9, 'Pâtes à la carbonara', 25, 'moyen', 'Faites cuire 200 g de spaghetti dans une casserole d\'eau bouillante salée selon les instructions sur l\'emballage. Pendant ce temps, dans une poêle, faites revenir 100 g de lardons jusqu\'à ce qu\'ils soient dorés. Dans un bol, battez 2 jaunes d\'œufs avec 50 g de parmesan râpé. Égouttez les pâtes cuites et réservez une petite quantité d\'eau de cuisson. Versez les pâtes chaudes dans la poêle avec les lardons et mélangez bien. Ajoutez progressivement le mélange d\'œufs et de parmesan, en remuant constamment pour éviter la formation de grumeaux. Si nécessaire, ajoutez un peu d\'eau de cuisson des pâtes pour obtenir une consistance crémeuse. Servez les pâtes à la carbonara immédiatement avec du parmesan supplémentaire.', 500, '2023-06-05 09:13:30', 1),
+(10, 'Smoothie bowl aux baies', 10, 'facile', 'Dans un mixeur, combinez 1 tasse de baies mélangées (fraises, framboises, myrtilles), 1 banane, 1/2 tasse de yaourt grec nature, 1 cuillère à soupe de miel et 1/4 de tasse de lait d\'amande. Mixez jusqu\'à obtenir une consistance lisse et crémeuse. Versez le smoothie dans un bol. Garnissez-le de tranches de banane, de baies fraîches, de noix de coco râpée et de graines de chia. Dégustez à la cuillère.', 300, '2023-06-05 09:13:35', 1),
+(11, 'Chili végétarien', 40, 'moyen', 'Dans une grande casserole, chauffez de l\'huile d\'olive. Ajoutez 1 oignon haché, 2 gousses d\'ail émincées, 1 poivron coupé en dés et faites revenir pendant quelques minutes. Ajoutez 1 boîte de haricots rouges, 1 boîte de haricots noirs, 1 boîte de maïs, 1 boîte de tomates concassées, 2 cuillères à soupe de poudre de chili, 1 cuillère à soupe de cumin, du sel et du poivre. Laissez mijoter pendant environ 30 minutes. Servez le chili végétarien chaud avec du riz, de la coriandre fraîche et des quartiers de citron vert.', 350, '2023-06-05 09:14:51', 2);
 
 -- --------------------------------------------------------
 
@@ -217,6 +215,7 @@ CREATE TABLE IF NOT EXISTS `recipes_details_view` (
 ,`image_paths` text
 ,`categories` text
 ,`foodtypes_with_percentages` text
+,`average_rating` decimal(14,4)
 );
 
 -- --------------------------------------------------------
@@ -244,24 +243,23 @@ CREATE TABLE IF NOT EXISTS `recipes_images` (
   `idRecipe` int UNSIGNED NOT NULL,
   PRIMARY KEY (`idImage`),
   KEY `idRecipe` (`idRecipe`)
-) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Dumping data for table `recipes_images`
 --
 
 INSERT INTO `recipes_images` (`idImage`, `path`, `idRecipe`) VALUES
-(37, '/default/breakfast.jpg', 37),
-(38, '/default/lunch.jpg', 38),
-(39, '/default/lunch.jpg', 39),
-(40, '/default/dinner.jpg', 40),
-(41, '/default/snack.jpg', 41),
-(42, '/default/lunch.jpg', 42),
-(43, '/default/dinner.jpg', 43),
-(44, '/default/dessert.jpg', 44),
-(45, '/default/lunch.jpg', 45),
-(46, '/default/dinner.jpg', 46),
-(47, '/default/snack.jpg', 47);
+(1, '/default/lunch.jpg', 1),
+(4, '/default/dessert.jpg', 5),
+(10, '/default/dinner.jpg', 11),
+(11, '247527.jpg', 10),
+(12, 'téléchargement.jpg', 3),
+(13, 'Le-smoothie-vert-a-tout-bon.jpg', 8),
+(14, 'Wraps-de-poulet-et-legumes.jpg', 6),
+(15, 'Lemon-Herb-Mediterranean-Chicken-Salad-208-957x675.jpg', 4),
+(16, 'spaghetti-carbonara-2560x1920.jpg', 9),
+(18, 'téléchargement (1).jpg', 7);
 
 -- --------------------------------------------------------
 
@@ -282,17 +280,16 @@ CREATE TABLE IF NOT EXISTS `recipe_categories` (
 --
 
 INSERT INTO `recipe_categories` (`idRecipe`, `idCategory`) VALUES
-(37, 1),
-(38, 4),
-(39, 4),
-(40, 5),
-(41, 3),
-(42, 4),
-(43, 5),
-(44, 6),
-(45, 4),
-(46, 5),
-(47, 3);
+(1, 4),
+(3, 1),
+(4, 4),
+(5, 6),
+(6, 4),
+(7, 5),
+(8, 3),
+(9, 5),
+(10, 1),
+(11, 5);
 
 -- --------------------------------------------------------
 
@@ -314,71 +311,48 @@ CREATE TABLE IF NOT EXISTS `recipe_food_types` (
 --
 
 INSERT INTO `recipe_food_types` (`idRecipe`, `idFoodType`, `percentage`) VALUES
-(37, 1, '30'),
-(37, 2, '15'),
-(37, 4, '20'),
-(37, 5, '15'),
-(37, 6, '20'),
-(38, 1, '0'),
-(38, 2, '30'),
-(38, 4, '30'),
-(38, 5, '20'),
-(38, 6, '0'),
-(38, 7, '20'),
-(39, 1, '0'),
-(39, 2, '20'),
-(39, 4, '30'),
-(39, 5, '10'),
-(39, 6, '40'),
-(39, 7, '0'),
-(40, 1, '0'),
-(40, 2, '10'),
-(40, 4, '20'),
-(40, 5, '10'),
-(40, 6, '40'),
-(40, 7, '20'),
-(41, 1, '40'),
-(41, 2, '10'),
-(41, 4, '10'),
-(41, 5, '30'),
-(41, 6, '0'),
-(41, 7, '10'),
-(42, 1, '0'),
-(42, 2, '10'),
-(42, 4, '10'),
-(42, 5, '40'),
-(42, 6, '20'),
-(42, 7, '20'),
-(43, 1, '0'),
-(43, 2, '30'),
-(43, 4, '20'),
-(43, 5, '40'),
-(43, 6, '0'),
-(43, 7, '10'),
-(44, 1, '40'),
-(44, 2, '0'),
-(44, 4, '20'),
-(44, 5, '20'),
-(44, 6, '20'),
-(44, 7, '0'),
-(45, 1, '0'),
-(45, 2, '20'),
-(45, 4, '20'),
-(45, 5, '40'),
-(45, 6, '0'),
-(45, 7, '20'),
-(46, 1, '0'),
-(46, 2, '30'),
-(46, 4, '10'),
-(46, 5, '40'),
-(46, 6, '10'),
-(46, 7, '10'),
-(47, 1, '10'),
-(47, 2, '0'),
-(47, 4, '40'),
-(47, 5, '40'),
-(47, 6, '0'),
-(47, 7, '10');
+(1, 7, '60'),
+(1, 5, '15'),
+(1, 4, '15'),
+(1, 2, '10'),
+(5, 5, '40'),
+(5, 1, '30'),
+(5, 4, '20'),
+(5, 7, '10'),
+(11, 2, '20'),
+(11, 4, '10'),
+(11, 5, '40'),
+(11, 7, '30'),
+(10, 1, '20'),
+(10, 2, '10'),
+(10, 3, '5'),
+(10, 4, '5'),
+(10, 5, '60'),
+(3, 3, '20'),
+(3, 5, '80'),
+(8, 1, '10'),
+(8, 2, '5'),
+(8, 3, '5'),
+(8, 4, '5'),
+(8, 5, '70'),
+(8, 7, '5'),
+(6, 2, '40'),
+(6, 4, '20'),
+(6, 5, '30'),
+(6, 7, '10'),
+(4, 2, '40'),
+(4, 4, '20'),
+(4, 5, '30'),
+(4, 7, '10'),
+(9, 2, '30'),
+(9, 3, '5'),
+(9, 4, '25'),
+(9, 7, '40'),
+(7, 2, '30'),
+(7, 3, '5'),
+(7, 4, '25'),
+(7, 5, '20'),
+(7, 7, '20');
 
 -- --------------------------------------------------------
 
@@ -395,14 +369,15 @@ CREATE TABLE IF NOT EXISTS `users` (
   `token` varchar(400) DEFAULT NULL,
   `expiration` int DEFAULT NULL,
   PRIMARY KEY (`idUser`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3;
 
 --
 -- Dumping data for table `users`
 --
 
 INSERT INTO `users` (`idUser`, `username`, `email`, `password`, `token`, `expiration`) VALUES
-(7, 'Example', 'example@cfpt.ch', '$2y$10$s0AaZ.bai596MKSYBen72uEeDCyYygyyalyAJlwbsTx5YLRORXdpe', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImV4YW1wbGVAY2ZwdC5jaCIsInVzZXJuYW1lIjoiRXhhbXBsZSIsImV4cCI6MTY4NDE2MjAwMX0.99y87W8g7EnQivYmQeuBkJpLrCF1djJXwAkv7CVVm6c', 1684162001);
+(1, 'Lucas', 'lucas@cfpt.ch', '$2y$10$CwaR1LC30.JLP3cmyHnp9uaBIGXV940EkTEqYeh.3nB5Dz0VFNA7O', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Imx1Y2FzQGNmcHQuY2giLCJ1c2VybmFtZSI6Ikx1Y2FzIiwiZXhwIjoxNjg1OTgxNTE1fQ.aQksnQLWnQV7q0DPeatCI2mj5Y-cUcjorvCoMuybfIg', 1685981515),
+(2, 'Jean', 'jean@cfpt.ch', '$2y$10$MdH9I55Is3xCcfbQ3kkmm./QeyWxb3CMLFErFr.GxtwQnf7aFNjJi', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImplYW5AY2ZwdC5jaCIsInVzZXJuYW1lIjoiSmVhbiIsImV4cCI6MTY4NTk2OTk3MX0.FB-pyXiWKI9XAsfDMqC3UFULSBTptYwBVEwIu1Je--M', 1685969971);
 
 -- --------------------------------------------------------
 
@@ -412,28 +387,7 @@ INSERT INTO `users` (`idUser`, `username`, `email`, `password`, `token`, `expira
 DROP TABLE IF EXISTS `recipes_details_view`;
 
 DROP VIEW IF EXISTS `recipes_details_view`;
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `recipes_details_view`  AS SELECT
-    `r`.`idRecipe` AS `recipe_id`,
-    `r`.`title` AS `recipe_title`,
-    `r`.`instructions` AS `recipe_instructions`,
-    `r`.`preparation_time` AS `preparation_time`,
-    `r`.`difficulty` AS `difficulty`,
-    `r`.`calories` AS `calories`,
-    `r`.`created_at` AS `created_at`,
-    `u`.`username` AS `creator_username`,
-    `u`.`idUser` AS `creator_id`,
-    group_concat(distinct CONCAT(`ri`.`idImage`, '_', `ri`.`path`) separator ', ') AS `image_paths`,
-    group_concat(distinct `c`.`name` separator ', ') AS `categories`,
-    `rf`.`foodtypes_with_percentages` AS `foodtypes_with_percentages`,
-    COALESCE(AVG(`rr`.`score`), 0) AS `average_rating`
-FROM (((((`recipes` `r`
-    left join `users` `u` on((`r`.`idUser` = `u`.`idUser`)))
-    left join `recipes_images` `ri` on((`r`.`idRecipe` = `ri`.`idRecipe`)))
-    left join `recipe_categories` `rc` on((`r`.`idRecipe` = `rc`.`idRecipe`)))
-    left join `categories` `c` on((`rc`.`idCategory` = `c`.`idCategory`)))
-    left join `recipes_foodtypes_view` `rf` on((`r`.`idRecipe` = `rf`.`idRecipe`)))
-    left join `ratings` `rr` on((`r`.`idRecipe` = `rr`.`idRecipe`))
-GROUP BY `r`.`idRecipe`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `recipes_details_view`  AS SELECT `r`.`idRecipe` AS `recipe_id`, `r`.`title` AS `recipe_title`, `r`.`instructions` AS `recipe_instructions`, `r`.`preparation_time` AS `preparation_time`, `r`.`difficulty` AS `difficulty`, `r`.`calories` AS `calories`, `r`.`created_at` AS `created_at`, `u`.`username` AS `creator_username`, `u`.`idUser` AS `creator_id`, group_concat(distinct concat(`ri`.`idImage`,'_',`ri`.`path`) separator ', ') AS `image_paths`, group_concat(distinct `c`.`name` separator ', ') AS `categories`, `rf`.`foodtypes_with_percentages` AS `foodtypes_with_percentages`, coalesce(avg(`rr`.`score`),0) AS `average_rating` FROM ((((((`recipes` `r` left join `users` `u` on((`r`.`idUser` = `u`.`idUser`))) left join `recipes_images` `ri` on((`r`.`idRecipe` = `ri`.`idRecipe`))) left join `recipe_categories` `rc` on((`r`.`idRecipe` = `rc`.`idRecipe`))) left join `categories` `c` on((`rc`.`idCategory` = `c`.`idCategory`))) left join `recipes_foodtypes_view` `rf` on((`r`.`idRecipe` = `rf`.`idRecipe`))) left join `ratings` `rr` on((`r`.`idRecipe` = `rr`.`idRecipe`))) GROUP BY `r`.`idRecipe`  ;
 
 -- --------------------------------------------------------
 
